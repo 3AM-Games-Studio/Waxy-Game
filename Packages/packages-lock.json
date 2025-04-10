@@ -1,5 +1,33 @@
 {
   "dependencies": {
+    "com.clastertools.assetrenamer": {
+      "version": "https://github.com/LucaValentini25/Unity-Tools.git?path=Tools/AssetRenamerTool",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "390f349d4cfc4281318967c534689d33a49f12ba"
+    },
+    "com.clastertools.playerprefsmanager": {
+      "version": "https://github.com/LucaValentini25/Unity-Tools.git?path=Tools/PlayerPrefsManager",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "390f349d4cfc4281318967c534689d33a49f12ba"
+    },
+    "com.clastertools.prefabreplacer": {
+      "version": "https://github.com/LucaValentini25/Unity-Tools.git?path=Tools/ReplaceForPrefabWindow",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "390f349d4cfc4281318967c534689d33a49f12ba"
+    },
+    "com.clastertools.renameitems": {
+      "version": "https://github.com/LucaValentini25/Unity-Tools.git?path=Tools/RenameItems",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "390f349d4cfc4281318967c534689d33a49f12ba"
+    },
     "com.gitamend.unityutils": {
       "version": "https://github.com/adammyhre/Unity-Utils.git",
       "depth": 0,
