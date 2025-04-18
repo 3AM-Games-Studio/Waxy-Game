@@ -49,6 +49,7 @@ namespace Core
             if (IsState(EGameState.Paused))
                 SetState(EGameState.Playing);
         }
+        
     }
     
     public enum EGameState 
