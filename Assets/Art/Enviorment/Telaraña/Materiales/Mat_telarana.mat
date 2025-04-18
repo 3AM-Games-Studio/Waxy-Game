@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Mat_telaraa
+  m_Name: Mat_telarana
   m_Shader: {fileID: -6465566751694194690, guid: a7fcb267cfe86594fbe2837362ccc615, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
