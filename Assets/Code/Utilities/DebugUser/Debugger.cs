@@ -8,7 +8,9 @@ namespace DebugSystem
     {
         private static readonly HashSet<DebugUserId> activeUsers = new HashSet<DebugUserId>();
         private const string PREF_KEY = "DebugUser.SelectedUsers";
+#pragma warning disable UDR0001
         private static bool _initialized = false;
+#pragma warning restore UDR0001
 
         private static void Initialize()
         {

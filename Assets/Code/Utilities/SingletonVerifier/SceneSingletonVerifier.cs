@@ -6,25 +6,33 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Event_Bus;
+using Object = UnityEngine.Object;
 
 namespace UnityUtils
 {
     public interface ISceneRequiredSingleton { }
 
+    #if UNITY_EDITOR
+    
     [InitializeOnLoad]
     public static class SceneSingletonVerifier
     {
         private const string ENABLED_PREF = "SingletonVerifier.Enabled";
         private const string TYPES_PREF = "SingletonVerifier.TypeNames";
-
+        
+        
+#pragma warning disable UDR0001
         private static bool _enabled;
-        private static readonly List<string> _typeNames = new();
-        private static readonly Dictionary<string, MonoBehaviour> _references = new();
+#pragma warning restore UDR0001
+        private static readonly List<string> TypeNames = new();
+        private static readonly Dictionary<string, MonoBehaviour> References = new();
 
         static SceneSingletonVerifier()
         {
             LoadPrefs();
+#pragma warning disable UDR0001
             EditorSceneManager.sceneSaving += OnSceneSaving;
+#pragma warning restore UDR0001
         }
 
         private static void OnSceneSaving(Scene scene, string path)
@@ -45,11 +53,11 @@ namespace UnityUtils
             }
         }
 
-        public static IEnumerable<string> GetTypeNames() => _typeNames;
+        public static IEnumerable<string> GetTypeNames() => TypeNames;
 
         public static MonoBehaviour GetReference(string typeName)
         {
-            _references.TryGetValue(typeName, out var refObj);
+            References.TryGetValue(typeName, out var refObj);
             return refObj;
         }
 
@@ -68,9 +76,9 @@ namespace UnityUtils
 
             foreach (string newType in discoveredTypes)
             {
-                if (!_typeNames.Contains(newType))
+                if (!TypeNames.Contains(newType))
                 {
-                    _typeNames.Add(newType);
+                    TypeNames.Add(newType);
                     anyNew = true;
                 }
             }
@@ -88,20 +96,20 @@ namespace UnityUtils
 
         private static void EnsureSingletons()
         {
-            foreach (var typeName in _typeNames)
+            foreach (var typeName in TypeNames)
             {
                 Type type = Type.GetType(typeName);
                 if (type == null || !typeof(MonoBehaviour).IsAssignableFrom(type)) continue;
 
-                if (GameObject.FindObjectOfType(type) is MonoBehaviour existing)
+                if (Object.FindFirstObjectByType(type) is MonoBehaviour existing)
                 {
-                    _references[typeName] = existing;
+                    References[typeName] = existing;
                     continue;
                 }
 
                 GameObject go = new($"{type.Name} Auto-Generated");
                 var component = go.AddComponent(type) as MonoBehaviour;
-                _references[typeName] = component;
+                References[typeName] = component;
 
                 Debug.Log($"[SceneSingletonVerifier] Created singleton: {type.Name}");
             }
@@ -109,16 +117,16 @@ namespace UnityUtils
 
         private static void UpdateReferences()
         {
-            _references.Clear();
+            References.Clear();
 
-            foreach (var typeName in _typeNames)
+            foreach (var typeName in TypeNames)
             {
                 Type type = Type.GetType(typeName);
                 if (type == null || !typeof(MonoBehaviour).IsAssignableFrom(type)) continue;
 
-                var found = GameObject.FindObjectOfType(type) as MonoBehaviour;
+                var found = Object.FindFirstObjectByType(type) as MonoBehaviour;
                 if (found != null)
-                    _references[typeName] = found;
+                    References[typeName] = found;
             }
         }
 
@@ -126,17 +134,17 @@ namespace UnityUtils
         {
             _enabled = EditorPrefs.GetBool(ENABLED_PREF, true);
             string joined = EditorPrefs.GetString(TYPES_PREF, string.Empty);
-            _typeNames.Clear();
+            TypeNames.Clear();
 
             if (!string.IsNullOrEmpty(joined))
-                _typeNames.AddRange(joined.Split('|'));
+                TypeNames.AddRange(joined.Split('|'));
 
             UpdateReferences();
         }
 
         private static void SavePrefs()
         {
-            string joined = string.Join("|", _typeNames);
+            string joined = string.Join("|", TypeNames);
             EditorPrefs.SetString(TYPES_PREF, joined);
         }
 
@@ -156,4 +164,5 @@ namespace UnityUtils
             return false;
         }
     }
+#endif
 }

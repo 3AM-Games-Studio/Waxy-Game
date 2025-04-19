@@ -30,7 +30,9 @@ namespace Event_Bus
         public static void InitializeEditor()
         {
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#pragma warning disable UDR0003
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#pragma warning restore UDR0003
         }
 
         static void OnPlayModeStateChanged(PlayModeStateChange state)
