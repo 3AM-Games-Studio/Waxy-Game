@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.gitamend.improvedtimers": "https://github.com/adammyhre/Unity-Improved-Timers.git",
     "com.clastertools.assetrenamer": "https://github.com/LucaValentini25/Unity-Tools.git?path=Tools/AssetRenamerTool",
     "com.clastertools.playerprefsmanager": "https://github.com/LucaValentini25/Unity-Tools.git?path=Tools/PlayerPrefsManager",
     "com.clastertools.prefabreplacer": "https://github.com/LucaValentini25/Unity-Tools.git?path=Tools/ReplaceForPrefabWindow",
