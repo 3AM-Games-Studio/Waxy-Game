@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: cdc2edf33e630f544a015e28e367ab2c
+guid: b5df966653da7aa488840f307bb52a66
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Sillon1
-    second: {fileID: 2100000, guid: 5e3c7bf53c0ef844cb6473ce710ae525, type: 2}
+      name: MaderaCaja
+    second: {fileID: 2100000, guid: e57d4e13de1414940a0a7b2fc974fdec, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -38,7 +38,7 @@ ModelImporter:
     isReadable: 0
   meshes:
     lODScreenPercentages: []
-    globalScale: 0.03
+    globalScale: 100
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
@@ -93,7 +93,7 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    globalScale: 0.03
+    globalScale: 1
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
