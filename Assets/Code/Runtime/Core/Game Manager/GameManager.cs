@@ -1,5 +1,6 @@
 using DebugSystem;
 using Event_Bus;
+using UnityEngine;
 using UnityUtils;
 
 namespace Core
@@ -7,15 +8,13 @@ namespace Core
     
     public class GameManager : PersistentSingleton<GameManager> , ISceneRequiredSingleton
     {
-        private const EGameState _initialState = EGameState.Booting;
+        private const EGameState InitialState = EGameState.Booting;
 
         private EGameState CurrentState { get; set; }
         protected override void Awake()
         {
             base.Awake();
-            SetState(_initialState);
-            
-            Debugger.Log("debug",DebugUserId.Luca);
+            SetState(InitialState);
         }
 
        
@@ -50,26 +49,5 @@ namespace Core
                 SetState(EGameState.Playing);
         }
         
-    }
-    
-    public enum EGameState 
-    {
-        Booting,
-        MainMenu,
-        Playing,
-        Paused,
-        GameOver,
-        Cinematic
-    }
-    public class GameStateEvent : IEvent
-    {
-        public EGameState NewState;
-        public EGameState PreviousState;
-
-        public GameStateEvent(EGameState from, EGameState to)
-        {
-            PreviousState = from;
-            NewState = to;
-        }
     }
 }
