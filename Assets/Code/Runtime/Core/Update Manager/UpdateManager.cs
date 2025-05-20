@@ -7,20 +7,30 @@
     public class UpdateManager : PersistentSingleton<UpdateManager> , ISceneRequiredSingleton
     {
         
-        private event Action _update;
-        private event Action _updateUnpaused;
-
-        private event Action _fixedUpdate;
-        private event Action _fixedUpdateUnpaused;
-
-        private event Action _lateUpdate;
-        private event Action _lateUpdateUnpaused;
+        private static event Action _update;
+        private static event Action _updateUnpaused;
+        private static event Action _fixedUpdate;
+        private static event Action _fixedUpdateUnpaused;
+        private static event Action _lateUpdate;
+        private static event Action _lateUpdateUnpaused;
 
         public bool IsPaused { get; private set;}
         
         
         private EventBinding<GameStateEvent> _binding;
         private void OnGameStateChanged(GameStateEvent e) => IsPaused = e.NewState == EGameState.Paused;
+
+        protected override void Awake()
+        {
+            UnregisterAll();
+            base.Awake();
+            IsPaused = false;
+        }
+
+        private void OnDestroy()
+        {
+            UnregisterAll();
+        }
 
         void OnEnable()
         {
@@ -52,40 +62,70 @@
         }
 
         // ---- Métodos de registro separados ----
-        public void RegisterToUpdate(Action method, bool ignorePause = false)
+        public static void RegisterToUpdate(IUpdateReceiver receiver, bool ignorePause = false)
         {
-            if (ignorePause) _updateUnpaused += method;
-            else _update += method;
+#pragma warning disable UDR0004
+            if (ignorePause) _updateUnpaused += receiver.OnUpdate;
+            else _update += receiver.OnUpdate;
+#pragma warning restore UDR0004
         }
 
-        public void UnregisterFromUpdate(Action method)
+        public static void UnregisterFromUpdate(IUpdateReceiver receiver)
         {
-            _update -= method;
-            _updateUnpaused -= method;
+            _update -= receiver.OnUpdate;
+            _updateUnpaused -= receiver.OnUpdate;
         }
 
-        public void RegisterToFixedUpdate(Action method, bool ignorePause = false)
+        public static void RegisterToFixedUpdate(IUpdateReceiver receiver, bool ignorePause = false)
         {
-            if (ignorePause) _fixedUpdateUnpaused += method;
-            else _fixedUpdate += method;
+#pragma warning disable UDR0004
+            if (ignorePause) _fixedUpdateUnpaused += receiver.OnFixedUpdate;
+            else _fixedUpdate += receiver.OnFixedUpdate;
+#pragma warning restore UDR0004
         }
 
-        public void UnregisterFromFixedUpdate(Action method)
+        public static void UnregisterFromFixedUpdate(IUpdateReceiver receiver)
         {
-            _fixedUpdate -= method;
-            _fixedUpdateUnpaused -= method;
+            _fixedUpdate -= receiver.OnFixedUpdate;
+            _fixedUpdateUnpaused -= receiver.OnFixedUpdate;
         }
 
-        public void RegisterToLateUpdate(Action method, bool ignorePause = false)
+        public static void RegisterToLateUpdate(IUpdateReceiver receiver, bool ignorePause = false)
         {
-            if (ignorePause) _lateUpdateUnpaused += method;
-            else _lateUpdate += method;
+#pragma warning disable UDR0004
+            if (ignorePause) _lateUpdateUnpaused += receiver.OnLateUpdate;
+            else _lateUpdate += receiver.OnLateUpdate;
+#pragma warning restore UDR0004
         }
 
-        public void UnregisterFromLateUpdate(Action method)
+        public static void UnregisterFromLateUpdate(IUpdateReceiver receiver)
         {
-            _lateUpdate -= method;
-            _lateUpdateUnpaused -= method;
+            _lateUpdate -= receiver.OnLateUpdate;
+            _lateUpdateUnpaused -= receiver.OnLateUpdate;
+        }
+
+        private static void UnregisterAll()
+        {
+            UnregisterAllUpdates();
+            UnregisterAllFixedUpdates();
+            UnregisterAllLateUpdates();
+        }
+        private static void UnregisterAllUpdates()
+        {
+            _update = delegate { };
+            _updateUnpaused = delegate { };
+        }
+
+        private static void UnregisterAllFixedUpdates()
+        {
+            _fixedUpdate = delegate { };
+            _fixedUpdateUnpaused = delegate { };
+        }
+
+        private static void UnregisterAllLateUpdates()
+        {
+            _lateUpdate = delegate { };
+            _lateUpdateUnpaused = delegate { };
         }
     }
 

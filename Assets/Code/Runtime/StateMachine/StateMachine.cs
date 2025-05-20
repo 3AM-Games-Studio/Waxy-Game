@@ -36,7 +36,7 @@ namespace UnityUtils.StateMachine
         }
 
         public void SetState(IState state) {
-            currentNode = nodes[state.GetType()];
+             currentNode = nodes[state.GetType()];
             currentNode.State?.OnEnter();
         }
 

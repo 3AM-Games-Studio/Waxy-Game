@@ -17,31 +17,41 @@ namespace Player.States
         public virtual void Update() { }
         public virtual void FixedUpdate() { }
 
-        public virtual void OnEnter()
-        {
-            Debug.Log($"Enter State {this.GetType().Name}");
-        }
+        public virtual void OnEnter() { }
         public virtual void OnExit() { }
     }
     //Player States Idle, Move, Running, Jumping, Falling, Sliding, Grounded, Carrying, Pushing, Interacting, Dead
     public class IdleState : BasePlayerState
     {
-        public IdleState(PlayerController controller) : base(controller)
+        public IdleState(PlayerController controller) : base(controller) { }
+
+        public override void FixedUpdate()
         {
-            
+            controller.MovementModule.ApplyIdleFriction();
         }
     }
+
     
     public class MoveState : BasePlayerState
     {
         public MoveState(PlayerController controller) : base(controller)
         {
         }
+
+        public override void FixedUpdate()
+        {
+            controller.MovementModule.ApplyGroundedMovement();
+        }
     }
     public class RunningState : BasePlayerState
     {
         public RunningState(PlayerController controller) : base(controller)
         {
+        }
+
+        public override void FixedUpdate()
+        {
+            controller.MovementModule.ApplyGroundedMovement();
         }
     }
     public class JumpingState : BasePlayerState
@@ -51,9 +61,10 @@ namespace Player.States
         }
         
         public override void OnEnter() {
-
+            controller.MovementModule.OnJumpStart();
         }
-
+        
+        public override void FixedUpdate() => controller.MovementModule.ApplyAirMovement();
         public override void OnExit()
         {
             // animationController.HandleJump(false);
@@ -64,17 +75,19 @@ namespace Player.States
         public FallingState(PlayerController controller) : base(controller)
         {
         }
-        public override void OnEnter() {
- 
-        }
+        public override void OnEnter() => controller.MovementModule.OnFallStart();
+        
+        public override void FixedUpdate() => controller.MovementModule.ApplyAirMovement();
     }
     public class RisingState : BasePlayerState {
 
         public RisingState(PlayerController controller) : base(controller) { }
-        
-        public override void OnEnter() {
 
+        public override void OnEnter()
+        {
         }
+
+        public override void FixedUpdate() => controller.MovementModule.ApplyAirMovement();
     }
 
     public class SlidingState : BasePlayerState
@@ -82,18 +95,25 @@ namespace Player.States
         public SlidingState(PlayerController controller) : base(controller)
         {
         }
-        public override void OnEnter() {
 
+        public override void OnEnter()
+        {
+            Debug.Log("Enter Sliding State");
         }
-        
+        public override void FixedUpdate()
+        {
+            controller.MovementModule.ApplySlideMovement();
+        }
     }
     public class GroundedState : BasePlayerState
     {
         public GroundedState(PlayerController controller) : base(controller)
         {
         }
-        public override void OnEnter() {
-
+        public override void OnEnter()
+        {
+            base.OnEnter(); 
+            // controller.MovementModule.OnGroundContactRegained();
         }
     }
     public class CarryingState : BasePlayerState

@@ -100,6 +100,7 @@ namespace AdvancedController {
             sensor ??= new RaycastSensor(tr);
             
             sensor.SetCastOrigin(col.bounds.center);
+            // sensor.SetCastOrigin(tr.position + tr.up * (col.height * 0.5f));
             sensor.SetCastDirection(RaycastSensor.CastDirection.Down);
             RecalculateSensorLayerMask();
             

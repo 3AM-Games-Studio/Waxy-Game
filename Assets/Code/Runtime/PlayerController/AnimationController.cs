@@ -19,11 +19,11 @@ namespace AdvancedController {
         }
 
         void Update() {
-            animator.SetFloat(speedHash, controller.GetMovementVelocity().magnitude);
+            animator?.SetFloat(speedHash, controller.GetMovementVelocity().magnitude);
         }
-        public void HandleJump(bool isJumping) => animator.SetBool(isJumpingHash, isJumping);
-        public void HandleGround(bool isGrounded) => animator.SetBool(isGoundedHash, isGrounded);
-        void HandleJump(Vector3 momentum) => animator.SetBool(isJumpingHash, true);
-        void HandleLand(Vector3 momentum) => animator.SetBool(isJumpingHash, false);
+        public void HandleJump(bool isJumping) => animator?.SetBool(isJumpingHash, isJumping);
+        public void HandleGround(bool isGrounded) => animator?.SetBool(isGoundedHash, isGrounded);
+        void HandleJump(Vector3 momentum) => animator?.SetBool(isJumpingHash, true);
+        void HandleLand(Vector3 momentum) => animator?.SetBool(isJumpingHash, false);
     }
 }
