@@ -40,6 +40,9 @@ namespace Player
         
         [Tooltip("Fuerza adicional aplicada al deslizar por pendientes empinadas.")]
         public float slideGravity = 5f;
+        [Tooltip("Multiplicador de gravedad cuando se corta el salto antes de tiempo.")]
+        public float jumpCutGravityMultiplier = 2f;
+
         
         [Tooltip("Ángulo máximo que se considera suelo. Más allá de este valor, el personaje se desliza.")]
         public float slopeLimit = 30f;
@@ -63,9 +66,15 @@ namespace Player
             CurrentSpeed = walkSpeed;
             SetUpModules();
             SetupStateMachine();
+            
         }
 
-        private void Start() => input.EnablePlayerActions();
+        private void Start()
+        {
+            input.EnablePlayerActions();
+            SubscribeInputs();
+            SubscribeUpdates();
+        }
 
         private void OnEnable()
         {
@@ -94,34 +103,43 @@ namespace Player
         {
             UpdateManager.RegisterToUpdate(this);
             UpdateManager.RegisterToFixedUpdate(this);
+            UpdateManager.RegisterToLateUpdate(this);
         }
         
         private void UnsubscribeUpdates()
         {
             UpdateManager.UnregisterFromUpdate(this);
             UpdateManager.UnregisterFromFixedUpdate(this);
+            UpdateManager.UnregisterFromLateUpdate(this);
         }
-
-        private void Update()
+        // public void Update()
+        // {
+        //     stateMachine.Update();
+        // }
+        //
+        // public void FixedUpdate()
+        // {
+        //     stateMachine.FixedUpdate();
+        // }
+        //
+        // public void LateUpdate()
+        // {
+        //     MovementModule.LateTick();
+        // }
+        public void OnUpdate()
         {
             stateMachine.Update();
         }
 
-        private void FixedUpdate()
+        public void OnFixedUpdate()
         {
             stateMachine.FixedUpdate();
         }
 
-        public void OnUpdate()
+        public void OnLateUpdate()
         {
-            // stateMachine.Update();
+            MovementModule.LateTick();
         }
-
-        public void OnFixedUpdate()
-        {
-            // stateMachine.FixedUpdate();
-        }
-        public void OnLateUpdate() { }
         
         #endregion
 

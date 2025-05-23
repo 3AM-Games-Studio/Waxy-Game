@@ -3,60 +3,53 @@ using UnityUtils;
 
 namespace AdvancedController {
     public class TurnTowardController : MonoBehaviour {
-        [SerializeField] PlayerController controller;
-        public float turnSpeed = 50f;
+        [SerializeField] private Player.PlayerController controller;
+        [Header("Rotation Settings")]
+        public float turnSpeed = 8f; // A smooth blend speed; higher = snappier
 
         [Header("Movement Penalty")]
         [Range(0f, 1f)] public float maxRotationPenalty = 0.5f;
         [Range(0f, 180f)] public float rotationToleranceAngle = 15f;
         public float rotationSpeedMultiplier = 1f;
         public float onAirRotationSpeedMultiplier = 0.75f;
-        Transform tr;
-        float currentYRotation;
-        const float fallOffAngle = 90f;
+
+        private Transform tr;
 
         void Start() {
             tr = transform;
-            currentYRotation = tr.localEulerAngles.y;
         }
 
         void LateUpdate() {
-            Vector3 inputDir = controller.GetMovementVelocity();
-            Vector3 movementDir = Vector3.ProjectOnPlane(inputDir, tr.parent.up);
+            Vector3 inputVelocity = controller.MovementModule.GetMovementVelocity();
+            Vector3 movementDir = Vector3.ProjectOnPlane(inputVelocity, tr.parent.up);
 
-            if (movementDir.sqrMagnitude < 0.0001f ) {
-                controller.SetRotationSpeedMultiplier(1);
+            if (movementDir.sqrMagnitude < 0.0001f) {
+                controller.MovementModule.SetRotationSpeedMultiplier(1f);
                 return;
             }
 
-            // Calcular diferencia de rotación
+            // Calculate rotation toward movement direction
+            Quaternion currentRot = tr.rotation;
+            Quaternion targetRot = Quaternion.LookRotation(movementDir, tr.parent.up);
+
+            float lerpSpeed = turnSpeed * rotationSpeedMultiplier;
+            if (!controller.MovementModule.IsGrounded())
+                lerpSpeed *= onAirRotationSpeedMultiplier;
+
+            tr.rotation = Quaternion.Lerp(currentRot, targetRot, lerpSpeed * Time.deltaTime);
+
+            // Calculate rotation penalty
             float angleDifference = VectorMath.GetAngle(tr.forward, movementDir.normalized, tr.parent.up);
+            float angleAbs = Mathf.Abs(angleDifference);
 
-            // Aplicar rotación suave
-            float targetYRotation = Quaternion.LookRotation(movementDir, tr.parent.up).eulerAngles.y;
-            float finalTurnSpeed = turnSpeed * rotationSpeedMultiplier;
-            if (!controller.IsGrounded())
-                finalTurnSpeed *= onAirRotationSpeedMultiplier;
+            float finalMultiplier = 1f;
+            if (angleAbs > rotationToleranceAngle) {
+                float t = Mathf.InverseLerp(rotationToleranceAngle, 180f, angleAbs);
+                float penalty = Mathf.Lerp(1f, 1f - maxRotationPenalty, t);
+                finalMultiplier = penalty;
+            }
 
-            float step = finalTurnSpeed * Time.deltaTime;
-            currentYRotation = Mathf.MoveTowardsAngle(currentYRotation, targetYRotation, step);
-            tr.localRotation = Quaternion.Euler(0f, currentYRotation, 0f);
-
-           
-                // Penalización por ángulo
-                float angleAbs = Mathf.Abs(angleDifference);
-                float finalMultiplier;
-
-                if (angleAbs <= rotationToleranceAngle) {
-                    finalMultiplier = 1f;
-                } else {
-                    float t = Mathf.InverseLerp(rotationToleranceAngle, 180f, angleAbs);
-                    float penalty = Mathf.Lerp(1f, 1f - maxRotationPenalty, t);
-                    finalMultiplier = penalty ;
-                }
-                
-                controller.SetRotationSpeedMultiplier(finalMultiplier);
-            
+            controller.MovementModule.SetRotationSpeedMultiplier(finalMultiplier);
         }
     }
 }

@@ -17,6 +17,7 @@ namespace Player.Modules
         private Vector3 _savedVelocity;     // opcional para debug o exposición
         private bool jumpKeyIsPressed,jumpKeyWasPressed,jumpKeyWasLetGo,jumpInputIsLocked;
         private CountdownTimer jumpTimer;
+        
         private CountdownTimer groundIgnoreTimer;
         private float groundIgnoreDuration = .15f;
         private Vector3 momentum;
@@ -38,6 +39,11 @@ namespace Player.Modules
             _mover = _controller.GetComponent<PlayerMover>();
             groundIgnoreTimer = new CountdownTimer(groundIgnoreDuration);
         }
+
+        public void LateTick()
+        {
+            ceilingDetector?.Reset();
+        }
         public bool WantsToJump() =>
             jumpKeyWasPressed && !jumpInputIsLocked && IsGrounded();
 
@@ -57,7 +63,7 @@ namespace Player.Modules
         {
             return jumpTimer.IsFinished || jumpKeyWasLetGo;
         }
-        
+        public Vector3 GetMovementVelocity() => _savedVelocity;
         public bool IsGrounded()
         {
             if (!groundIgnoreTimer.IsFinished)
@@ -90,7 +96,7 @@ namespace Player.Modules
             if (moveDirection.sqrMagnitude > 1f)
                 moveDirection.Normalize();
 
-            Vector3 targetVelocity = moveDirection * _controller.CurrentSpeed;
+            Vector3 targetVelocity = moveDirection * (_controller.CurrentSpeed * _rotationSpeedMultiplier);
 
             // --- Suavizar horizontal (como fricción) ---
             Vector3 horizontalMomentum = VectorMath.RemoveDotVector(momentum, transform.up);
@@ -147,7 +153,7 @@ namespace Player.Modules
                     inputDirection.Normalize();
             }
 
-            Vector3 targetVelocity = inputDirection * _controller.CurrentSpeed;
+            Vector3 targetVelocity = inputDirection * (_controller.CurrentSpeed * _rotationSpeedMultiplier);
 
             // --- Aplicar control en el aire ---
             if (horizontalMomentum.magnitude > _controller.CurrentSpeed)
@@ -179,6 +185,19 @@ namespace Player.Modules
 
         public void OnFallStart()
         {
+            // Eliminar cualquier impulso hacia arriba
+            Vector3 upMomentum = VectorMath.ExtractDotVector(momentum, transform.up);
+            if (VectorMath.GetDotProduct(upMomentum, transform.up) > 0f)
+            {
+                momentum = VectorMath.RemoveDotVector(momentum, transform.up);
+            }
+
+            // Aplicar un pequeño impulso hacia abajo para forzar el inicio de la caída
+            momentum -= transform.up * (_controller.gravity * Time.fixedDeltaTime);
+
+            // Aplicar inmediatamente el nuevo momentum
+            _mover.SetVelocity(momentum);
+            _savedVelocity = momentum;
         }
         public void SetJumpInput(bool isButtonPressed)
         {
@@ -278,6 +297,11 @@ namespace Player.Modules
         {
             jumpKeyWasPressed = false;
             jumpKeyWasLetGo = false;
+        }
+        private float _rotationSpeedMultiplier = 1f;
+        public void SetRotationSpeedMultiplier(float rotMultiplier)
+        {
+            _rotationSpeedMultiplier = Mathf.Clamp01(rotMultiplier);
         }
     }
     
