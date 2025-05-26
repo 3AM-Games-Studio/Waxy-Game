@@ -1,8 +1,12 @@
+using System;
+using Core;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityUtils;
 
 namespace AdvancedController {
-    public class TurnTowardController : MonoBehaviour {
+    public class TurnTowardController : MonoBehaviour , IUpdateReceiver
+    {
         [SerializeField] private Player.PlayerController controller;
         [Header("Rotation Settings")]
         public float turnSpeed = 8f; // A smooth blend speed; higher = snappier
@@ -14,12 +18,46 @@ namespace AdvancedController {
         public float onAirRotationSpeedMultiplier = 0.75f;
 
         private Transform tr;
+        
+
+        private void OnEnable()
+        {
+            UpdateManager.RegisterToLateUpdate(this);
+        }
+
+        private void OnDisable()
+        {
+            UpdateManager.UnregisterFromLateUpdate(this);
+        }
+
+        private void OnDestroy()
+        {
+            UpdateManager.UnregisterFromLateUpdate(this);
+        }
 
         void Start() {
             tr = transform;
+            _currentRotation = NormalRotation;
+            UpdateManager.RegisterToLateUpdate(this);
+        }
+        
+        public void SetPushingMode(bool enable)
+        {
+            if (enable) _currentRotation = PushRotation;
+            else _currentRotation = NormalRotation;
         }
 
-        void LateUpdate() {
+        private Action _currentRotation;
+        public void OnUpdate(){ }
+        public void OnFixedUpdate() { }
+        
+        public void OnLateUpdate()
+        {
+            _currentRotation.Invoke();
+        }
+
+        private void NormalRotation()
+        {
             Vector3 inputVelocity = controller.MovementModule.GetMovementVelocity();
             Vector3 movementDir = Vector3.ProjectOnPlane(inputVelocity, tr.parent.up);
 
@@ -50,6 +88,28 @@ namespace AdvancedController {
             }
 
             controller.MovementModule.SetRotationSpeedMultiplier(finalMultiplier);
+        }
+
+        private void PushRotation()
+        {
+            if (!controller.PushModule.ShouldRotateMesh)
+            {
+                controller.MovementModule.SetRotationSpeedMultiplier(1f);
+                return;
+            }
+
+            Vector3 lookDir = controller.PushModule.DesiredMeshForward;
+            if (lookDir.sqrMagnitude < 0.001f)
+                return;
+
+            Quaternion currentRot = tr.rotation;
+            Quaternion targetRot = Quaternion.LookRotation(lookDir, tr.parent.up);
+
+            float lerpSpeed = turnSpeed * rotationSpeedMultiplier;
+            if (!controller.MovementModule.IsGrounded())
+                lerpSpeed *= onAirRotationSpeedMultiplier;
+
+            tr.rotation = Quaternion.Lerp(currentRot, targetRot, lerpSpeed * Time.deltaTime);
         }
     }
 }

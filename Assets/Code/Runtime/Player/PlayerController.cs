@@ -1,14 +1,21 @@
 using System;
+using AdvancedController;
 using Core;
 using UnityEngine;
 using UnityUtils.StateMachine;
 using Player.Modules;
 using Player.States;
+using FallingState = Player.States.FallingState;
+using GroundedState = Player.States.GroundedState;
+using JumpingState = Player.States.JumpingState;
+using RisingState = Player.States.RisingState;
+using SlidingState = Player.States.SlidingState;
 
 namespace Player
 {
     public class PlayerController : StatefulEntity , IUpdateReceiver
     {
+        public string State;
         [SerializeField,Header("Inputs")] InputReader input;
         [SerializeField] private Transform camera;
         #region Variables
@@ -48,13 +55,15 @@ namespace Player
         public float slopeLimit = 30f;
         
         public float CurrentSpeed { get; private set; }
+        public Transform MeshPivot;
+
         #endregion
         
         #region Modules
 
         public MovementModule MovementModule;
         private CarryModule _carry;
-        private PushModule _push;
+        public PushModule PushModule;
         private InteractionModule _interaction;
         public PlayerEvents Events;
         #endregion
@@ -63,7 +72,14 @@ namespace Player
 
         private void Awake()
         {
+            Cursor.lockState = CursorLockMode.Locked;
             CurrentSpeed = walkSpeed;
+            if (!MeshPivot)
+            {
+                var turn = GetComponentInChildren<TurnTowardController>().transform;
+                if(turn)MeshPivot = turn.transform;
+                else Debug.LogError("No Turn Toward controller attached assign MeshPivot to player controller");
+            }
             SetUpModules();
             SetupStateMachine();
             
@@ -94,7 +110,17 @@ namespace Player
             UnsubscribeInputs();
             UnsubscribeUpdates();
         }
+        private void OnTriggerEnter(Collider other)
+        {
+            PushModule.OnTriggerEnter(other);
+            // _carry.OnTriggerEnter(other); // si hace falta
+            // _interaction.OnTriggerEnter(other); // si hace falta
+        }
 
+        private void OnTriggerExit(Collider other)
+        {
+            PushModule.OnTriggerExit(other);
+        }
         #endregion
         
         #region Update Methods
@@ -192,6 +218,7 @@ namespace Player
             At<Func<bool>>(grounded, sliding, () => MovementModule.IsGroundTooSteep());
             At<Func<bool>>(grounded, idle, () => input.Direction.sqrMagnitude < 0.01f);
             At<Func<bool>>(grounded, move, () => input.Direction.sqrMagnitude >= 0.01f);
+            At<Func<bool>>(grounded, pushing, () => PushModule.IsPushing);
 
             // ─────────────────────────────
             // Idle
@@ -199,6 +226,7 @@ namespace Player
             At<Func<bool>>(idle, jumping, () => MovementModule.WantsToJump());
             At<Func<bool>>(idle, falling, () => !MovementModule.IsGrounded());
             At<Func<bool>>(idle, move, () => input.Direction.sqrMagnitude > 0.01f);
+            At<Func<bool>>(idle, pushing, () => PushModule.IsPushing);
 
             // ─────────────────────────────
             // Move
@@ -207,7 +235,7 @@ namespace Player
             At<Func<bool>>(move, falling, () => !MovementModule.IsGrounded());
             At<Func<bool>>(move, running, () => isRunKeyPressed && isCandleLit);
             At<Func<bool>>(move, idle, () => input.Direction.sqrMagnitude <= 0.01f);
-
+            At<Func<bool>>(move, pushing, () => PushModule.IsPushing);
             // ─────────────────────────────
             // Running
             At<Func<bool>>(running, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
@@ -219,7 +247,10 @@ namespace Player
             // Carrying
 
             // Pushing
-
+            At<Func<bool>>(pushing, grounded, () => !PushModule.IsPushing);
+            At<Func<bool>>(pushing, falling, () => !PushModule.IsPushing);
+            At<Func<bool>>(pushing, idle, () => !PushModule.IsPushing);
+            At<Func<bool>>(pushing, move, () => !PushModule.IsPushing);
             // Interacting
 
             // Dead
@@ -282,7 +313,7 @@ namespace Player
         private void HandleGrabInput(bool isButtonPressed)
         {
             // _carry.SetGrabInput(isButtonPressed);
-            // _push.SetGrabInput(isButtonPressed);
+            PushModule.SetGrabInput(isButtonPressed);
         }
 
         private void HandleInteractInput(bool isButtonPressed)
@@ -303,11 +334,13 @@ namespace Player
         {
             MovementModule = new MovementModule();
             _carry = new CarryModule();
-            _push = new PushModule();
+            PushModule = new PushModule();
             _interaction = new InteractionModule();
             Events = new PlayerEvents();
             
             MovementModule.Initialize(
+                this,input,camera);
+            PushModule.Initialize(
                 this,input,camera);
         }
         #endregion

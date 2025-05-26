@@ -73,11 +73,7 @@ namespace Player.Modules
         }
         public bool IsGroundTooSteep()
         {
-            if (!_mover.IsGrounded())
-            {
-                Debug.Log("❌ No grounded, no slide");
-                return false;
-            }
+            if (!_mover.IsGrounded())return false;
 
             float angle = Vector3.Angle(GetGroundNormal(), transform.up);
             return angle > _controller.slopeLimit;
@@ -302,6 +298,26 @@ namespace Player.Modules
         public void SetRotationSpeedMultiplier(float rotMultiplier)
         {
             _rotationSpeedMultiplier = Mathf.Clamp01(rotMultiplier);
+        }
+
+        public void ApplyPushMovement()
+        {
+            _mover.CheckForGround();
+
+            Vector3 move = _controller.PushModule.GetPlayerMoveDirection();
+            Vector3 targetVelocity = move * (_controller.walkSpeed * _rotationSpeedMultiplier);
+
+            Vector3 horizontalMomentum = VectorMath.RemoveDotVector(momentum, transform.up);
+            horizontalMomentum = Vector3.MoveTowards(horizontalMomentum, targetVelocity, _controller.groundFriction * Time.fixedDeltaTime);
+
+            Vector3 verticalMomentum = VectorMath.ExtractDotVector(momentum, transform.up);
+            if (VectorMath.GetDotProduct(verticalMomentum, transform.up) < 0f)
+                verticalMomentum = Vector3.zero;
+
+            momentum = horizontalMomentum + verticalMomentum;
+
+            _mover.SetVelocity(momentum);
+            _savedVelocity = momentum;
         }
     }
     
