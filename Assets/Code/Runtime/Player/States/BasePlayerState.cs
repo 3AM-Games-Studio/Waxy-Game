@@ -1,4 +1,5 @@
 ﻿using AdvancedController;
+using Player.Modules;
 using UnityEngine;
 using UnityUtils.StateMachine;
 
@@ -17,7 +18,10 @@ namespace Player.States
         public virtual void Update() { }
         public virtual void FixedUpdate() { }
 
-        public virtual void OnEnter() { }
+        public virtual void OnEnter()
+        {
+            controller.State = GetType().Name;
+        }
         public virtual void OnExit() { }
     }
     //Player States Idle, Move, Running, Jumping, Falling, Sliding, Grounded, Carrying, Pushing, Interacting, Dead
@@ -61,6 +65,7 @@ namespace Player.States
         }
         
         public override void OnEnter() {
+            base.OnEnter();
             controller.MovementModule.OnJumpStart();
         }
         
@@ -75,17 +80,17 @@ namespace Player.States
         public FallingState(PlayerController controller) : base(controller)
         {
         }
-        public override void OnEnter() => controller.MovementModule.OnFallStart();
-        
+        public override void OnEnter()
+        {
+            base.OnEnter();
+            controller.MovementModule.OnFallStart();
+        }
+
         public override void FixedUpdate() => controller.MovementModule.ApplyAirMovement();
     }
     public class RisingState : BasePlayerState {
 
         public RisingState(PlayerController controller) : base(controller) { }
-
-        public override void OnEnter()
-        {
-        }
 
         public override void FixedUpdate() => controller.MovementModule.ApplyAirMovement();
     }
@@ -96,10 +101,6 @@ namespace Player.States
         {
         }
 
-        public override void OnEnter()
-        {
-            Debug.Log("Enter Sliding State");
-        }
         public override void FixedUpdate()
         {
             controller.MovementModule.ApplySlideMovement();
@@ -110,11 +111,6 @@ namespace Player.States
         public GroundedState(PlayerController controller) : base(controller)
         {
         }
-        public override void OnEnter()
-        {
-            base.OnEnter(); 
-            // controller.MovementModule.OnGroundContactRegained();
-        }
     }
     public class CarryingState : BasePlayerState
     {
@@ -124,10 +120,38 @@ namespace Player.States
     }
     public class PushingState : BasePlayerState
     {
+        private PushModule _push;
+        private MovementModule _movement;
+        private TurnTowardController _turn;
+
         public PushingState(PlayerController controller) : base(controller)
         {
+            _push = controller.PushModule;      // Podés hacer método público o usar propiedad interna
+            _movement = controller.MovementModule;
+            _turn = controller.GetComponentInChildren<TurnTowardController>();
+        }
+
+        public override void OnEnter()
+        {
+            base.OnEnter();
+            _turn.SetPushingMode(true); 
+        }
+
+        public override void FixedUpdate()
+        {
+            _push.FixedTick();
+            _movement.ApplyPushMovement();
+        }
+
+        public override void OnExit()
+        {
+            base.OnExit();
+
+            _turn.SetPushingMode(false);
+            _push.StopPush(); 
         }
     }
+    
     
     public class InteractingState : BasePlayerState
     {
