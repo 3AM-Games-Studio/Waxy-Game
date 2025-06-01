@@ -1,0 +1,303 @@
+using System;
+using Core;
+using UnityEngine;
+using UnityUtils.StateMachine;
+using Player.Modules;
+using Player.States;
+
+namespace Player
+{
+    public class PlayerController : StatefulEntity , IUpdateReceiver
+    {
+        [SerializeField,Header("Inputs")] InputReader input;
+        [SerializeField] private Transform camera;
+        #region Variables
+        
+        [Header("Movement Settings")]
+        [Tooltip("Velocidad base del personaje en el suelo.")]
+        public float walkSpeed;
+        [Tooltip("Velocidad base del personaje en el suelo.")]
+        public float runSpeed;
+        
+        
+        [Tooltip("Qué tan rápido se puede modificar la dirección en el aire.")]
+        public float airControlRate = 2f;
+        
+        [Tooltip("Fuerza inicial aplicada hacia arriba al iniciar un salto.")]
+        public float jumpSpeed = 10f;
+        
+        [Tooltip("Duración máxima del salto si se mantiene la tecla presionada.")]
+        public float jumpDuration = 0.2f;
+        
+        [Tooltip("Fricción horizontal aplicada mientras está en el aire.")]
+        public float airFriction = 0.5f;
+        
+        [Tooltip("Fricción horizontal aplicada mientras está en el suelo.")]
+        public float groundFriction = 100f;
+        
+        [Tooltip("Fuerza de gravedad que tira hacia abajo al personaje.")]
+        public float gravity = 30f;
+        
+        [Tooltip("Fuerza adicional aplicada al deslizar por pendientes empinadas.")]
+        public float slideGravity = 5f;
+        
+        [Tooltip("Ángulo máximo que se considera suelo. Más allá de este valor, el personaje se desliza.")]
+        public float slopeLimit = 30f;
+        
+        public float CurrentSpeed { get; private set; }
+        #endregion
+        
+        #region Modules
+
+        public MovementModule MovementModule;
+        private CarryModule _carry;
+        private PushModule _push;
+        private InteractionModule _interaction;
+        public PlayerEvents Events;
+        #endregion
+
+        #region Unity Methods
+
+        private void Awake()
+        {
+            CurrentSpeed = walkSpeed;
+            SetUpModules();
+            SetupStateMachine();
+        }
+
+        private void Start() => input.EnablePlayerActions();
+
+        private void OnEnable()
+        {
+            SubscribeInputs();
+            SubscribeUpdates();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeInputs();
+            UnsubscribeUpdates();
+        }
+        private void OnDestroy()
+        {
+            Events.Dispose();
+            
+            UnsubscribeInputs();
+            UnsubscribeUpdates();
+        }
+
+        #endregion
+        
+        #region Update Methods
+              
+        private void SubscribeUpdates()
+        {
+            UpdateManager.RegisterToUpdate(this);
+            UpdateManager.RegisterToFixedUpdate(this);
+        }
+        
+        private void UnsubscribeUpdates()
+        {
+            UpdateManager.UnregisterFromUpdate(this);
+            UpdateManager.UnregisterFromFixedUpdate(this);
+        }
+
+        private void Update()
+        {
+            stateMachine.Update();
+        }
+
+        private void FixedUpdate()
+        {
+            stateMachine.FixedUpdate();
+        }
+
+        public void OnUpdate()
+        {
+            // stateMachine.Update();
+        }
+
+        public void OnFixedUpdate()
+        {
+            // stateMachine.FixedUpdate();
+        }
+        public void OnLateUpdate() { }
+        
+        #endregion
+
+        #region State Machine Setup
+
+        private void SetupStateMachine() {
+            stateMachine = new StateMachine();
+
+            #region States
+            var idle = new IdleState(this);
+            var move = new MoveState(this);
+            var running = new RunningState(this);
+            var jumping = new JumpingState(this);
+            var falling = new FallingState(this);
+            var sliding = new SlidingState(this);
+            var rising = new RisingState(this);
+            var grounded = new GroundedState(this);
+            var carrying = new CarryingState(this);
+            var pushing = new PushingState(this);
+            var interacting = new InteractingState(this);
+            var dead = new DeadState(this);
+            #endregion
+
+            #region Transitions
+
+            // ─────────────────────────────
+            // Sliding (más específico primero)
+            At<Func<bool>>(sliding, falling, () => !MovementModule.IsGrounded());
+            At<Func<bool>>(sliding, jumping, () => MovementModule.WantsToJump());
+            At<Func<bool>>(sliding, move, () => MovementModule.IsGrounded() && !MovementModule.IsGroundTooSteep() && input.Direction.sqrMagnitude > 0.01f);
+            At<Func<bool>>(sliding, idle, () => MovementModule.IsGrounded() && !MovementModule.IsGroundTooSteep() && input.Direction.sqrMagnitude <= 0.01f);
+
+            // ─────────────────────────────
+            // Falling
+            At<Func<bool>>(falling, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
+            At<Func<bool>>(falling, grounded, () => MovementModule.IsGrounded());
+
+            // ─────────────────────────────
+            // Rising
+            At<Func<bool>>(rising, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
+            At<Func<bool>>(rising, falling, () => MovementModule.ShouldStartFalling() || MovementModule.HitCeiling());
+
+            // ─────────────────────────────
+            // Jumping
+            At<Func<bool>>(jumping, rising, () => MovementModule.IsRising());
+            At<Func<bool>>(jumping, falling, () => MovementModule.HitCeiling());
+
+            // ─────────────────────────────
+            // Grounded
+            At<Func<bool>>(grounded, sliding, () => MovementModule.IsGroundTooSteep());
+            At<Func<bool>>(grounded, idle, () => input.Direction.sqrMagnitude < 0.01f);
+            At<Func<bool>>(grounded, move, () => input.Direction.sqrMagnitude >= 0.01f);
+
+            // ─────────────────────────────
+            // Idle
+            At<Func<bool>>(idle, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
+            At<Func<bool>>(idle, jumping, () => MovementModule.WantsToJump());
+            At<Func<bool>>(idle, falling, () => !MovementModule.IsGrounded());
+            At<Func<bool>>(idle, move, () => input.Direction.sqrMagnitude > 0.01f);
+
+            // ─────────────────────────────
+            // Move
+            At<Func<bool>>(move, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
+            At<Func<bool>>(move, jumping, () => MovementModule.WantsToJump());
+            At<Func<bool>>(move, falling, () => !MovementModule.IsGrounded());
+            At<Func<bool>>(move, running, () => isRunKeyPressed && isCandleLit);
+            At<Func<bool>>(move, idle, () => input.Direction.sqrMagnitude <= 0.01f);
+
+            // ─────────────────────────────
+            // Running
+            At<Func<bool>>(running, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
+            At<Func<bool>>(running, jumping, () => MovementModule.WantsToJump());
+            At<Func<bool>>(running, falling, () => !MovementModule.IsGrounded());
+            At<Func<bool>>(running, move, () => input.Direction.sqrMagnitude > 0.01f && (!isRunKeyPressed || !isCandleLit));
+            At<Func<bool>>(running, idle, () => input.Direction.sqrMagnitude <= 0.01f && (!isRunKeyPressed || !isCandleLit));
+
+            // Carrying
+
+            // Pushing
+
+            // Interacting
+
+            // Dead
+            #endregion
+            
+            //TODO delete after changing transitions
+            #region OldTransitions
+/*
+            At(grounded, rising, () => IsRising());
+            At(grounded, sliding, () => mover.IsGrounded() && IsGroundTooSteep());
+            At(grounded, falling, () => !mover.IsGrounded());
+            At(grounded, jumping, () => (jumpKeyIsPressed || jumpKeyWasPressed) && !jumpInputIsLocked);
+            
+            At(falling, rising, () => IsRising());
+            At(falling, grounded, () => mover.IsGrounded() && !IsGroundTooSteep());
+            At(falling, sliding, () => mover.IsGrounded() && IsGroundTooSteep());
+            
+            At(sliding, rising, () => IsRising());
+            At(sliding, falling, () => !mover.IsGrounded());
+            At(sliding, grounded, () => mover.IsGrounded() && !IsGroundTooSteep());
+            
+            At(rising, grounded, () => mover.IsGrounded() && !IsGroundTooSteep());
+            At(rising, sliding, () => mover.IsGrounded() && IsGroundTooSteep());
+            At(rising, falling, () => IsFalling());
+            At(rising, falling, () => ceilingDetector != null && ceilingDetector.HitCeiling());
+            
+            At(jumping, rising, () => jumpTimer.IsFinished || jumpKeyWasLetGo);
+            At(jumping, falling, () => ceilingDetector != null && ceilingDetector.HitCeiling());
+*/
+            #endregion
+            
+            stateMachine.SetState(falling);
+        }
+        public IState CurrentState() => stateMachine.CurrentState;
+        #endregion
+
+        #region Input Methods
+        private void SubscribeInputs()
+        {
+            input.Jump     += HandleJumpKeyInput;
+            input.Run      += HandleRunInput;
+            input.Interact += HandleInteractInput;
+            input.Grab     += HandleGrabInput;
+
+        }
+
+        private void UnsubscribeInputs()
+        {
+            input.Jump     -= HandleJumpKeyInput;
+            input.Run      -= HandleRunInput;
+            input.Interact -= HandleInteractInput;
+            input.Grab     -= HandleGrabInput;
+        }
+
+        void HandleJumpKeyInput(bool isButtonPressed)
+        {
+            MovementModule.SetJumpInput(isButtonPressed);
+        }
+        
+        private void HandleGrabInput(bool isButtonPressed)
+        {
+            // _carry.SetGrabInput(isButtonPressed);
+            // _push.SetGrabInput(isButtonPressed);
+        }
+
+        private void HandleInteractInput(bool isButtonPressed)
+        {
+            // _interaction.SetInteractInput(isButtonPressed);
+        }
+        [SerializeField] private bool isCandleLit = true; // Esto luego se conecta con CandleController
+        private bool isRunKeyPressed;
+        private void HandleRunInput(bool isButtonPressed)
+        {
+            isRunKeyPressed = isCandleLit && isButtonPressed;
+            CurrentSpeed = isRunKeyPressed ? runSpeed : walkSpeed;
+        }
+        #endregion
+
+        #region Modules Methods
+        private void SetUpModules()
+        {
+            MovementModule = new MovementModule();
+            _carry = new CarryModule();
+            _push = new PushModule();
+            _interaction = new InteractionModule();
+            Events = new PlayerEvents();
+            
+            MovementModule.Initialize(
+                this,input,camera);
+        }
+        #endregion
+
+        public void OnJumpStart()
+        {
+            
+        }
+    }
+    
+}
