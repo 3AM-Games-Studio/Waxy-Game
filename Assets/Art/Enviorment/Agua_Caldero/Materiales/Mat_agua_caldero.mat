@@ -56,7 +56,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _BubblesSpeed: 0
-    - _ChangeColor: 0
+    - _ChangeColor: 1
     - _Depth: 0.3
     - _DepthOpacity: 1
     - _EmissionMultiplier: 1
