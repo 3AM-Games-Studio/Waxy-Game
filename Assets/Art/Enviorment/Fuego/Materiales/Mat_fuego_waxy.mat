@@ -55,11 +55,11 @@ Material:
     - _FlameDiractionPower: 10000
     - _Float: 0.01
     - _LifeScalar: 1
-    - _Offset: 0.00005
+    - _Offset: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Range: 0.0198
-    - _VertexDisplay: 0.005
+    - _Range: 1.98
+    - _VertexDisplay: 0.5
     - _WaxPercent: 1
     m_Colors:
     - _Color_A: {r: 1, g: 0, b: 0, a: 0}
