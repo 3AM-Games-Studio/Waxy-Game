@@ -2,9 +2,9 @@
 
 namespace Player.Modules
 {
-    public class CarryModule
+    public class InteractionModule
     {
-        public void SetGrabInput(bool isButtonPressed)
+        public void SetInteractInput(bool isButtonPressed)
         {
             throw new NotImplementedException();
         }
