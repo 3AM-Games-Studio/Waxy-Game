@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace UnityUtils
 {
+#if UNITY_EDITOR
+
     public class SceneSingletonVerifierEditorWindow : EditorWindow
     {
         [MenuItem("Tools/Singleton Verifier")]
@@ -53,4 +55,5 @@ namespace UnityUtils
             GUI.backgroundColor = originalColor;
         }
     }
+#endif
 }

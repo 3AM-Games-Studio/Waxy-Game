@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using DebugSystem;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityUtils;
@@ -17,7 +16,7 @@ namespace Core
 
         private void CheckReferences()
         {
-           if(!blackScreenShader) Debugger.Error("Black screen Material not assigned", DebugUserId.Important);
+           if(!blackScreenShader) Debug.LogError("Black screen Material not assigned");
         }
 
         #region Black Screen

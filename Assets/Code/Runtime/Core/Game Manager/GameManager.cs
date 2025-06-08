@@ -1,4 +1,3 @@
-using DebugSystem;
 using Event_Bus;
 using UnityEngine;
 using UnityUtils;
@@ -15,6 +14,7 @@ namespace Core
         {
             base.Awake();
             SetState(InitialState);
+            
         }
 
        
@@ -24,9 +24,6 @@ namespace Core
 
             var previous = Instance.CurrentState;
             Instance.CurrentState = newState;
-
-            Debugger.Log($"[GameManager] State changed: {previous} → {newState}", DebugUserId.Luca);
-
             EventBus<GameStateEvent>.Raise(new GameStateEvent(previous, newState));
         }
 

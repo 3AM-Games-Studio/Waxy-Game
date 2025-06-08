@@ -210,11 +210,11 @@ namespace Player.Candle
         private void OnTriggerEnter(Collider other)
         {
             // if(other.gameObject.layer == (int) Layers.Flamable)
-            if (other.gameObject.layer != 7) return;
-            if(other.gameObject.TryGetComponent(out IFlameable flamable))
-            {
-                flamable.Interact(_flameMulti, _flameType);
-            }
+            // if (other.gameObject.layer != 7) return;
+    
+            if (!other.gameObject.TryGetComponent(out IFlameable flamable)) return;
+            Debug.Log("Entra");
+            flamable.Interact(_flameMulti, _flameType);
         }
 
         private void OnTriggerStay(Collider other)

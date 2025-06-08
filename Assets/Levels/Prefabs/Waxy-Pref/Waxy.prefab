@@ -50,6 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16b09debe14a09e44816ac7fd69eda46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  State: 
   input: {fileID: 11400000, guid: e38e78c33e17dae44ac6d5ee40742208, type: 2}
   camera: {fileID: 0}
   walkSpeed: 7
@@ -61,8 +62,11 @@ MonoBehaviour:
   groundFriction: 100
   gravity: 50
   slideGravity: 5
+  jumpCutGravityMultiplier: 2
   slopeLimit: 30
+  MeshPivot: {fileID: 0}
   isCandleLit: 1
+  interactionDuration: 0
 --- !u!114 &8279191567181298411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -175,6 +179,99 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5354211189014547972}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6069736471468362500
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6981406889981988824}
+  - component: {fileID: 2141857446054270337}
+  - component: {fileID: 2869067210639602857}
+  - component: {fileID: 14890778307379599}
+  m_Layer: 3
+  m_Name: Candle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6981406889981988824
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6069736471468362500}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7064176629575355497}
+  m_Father: {fileID: 4095508292378950749}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2141857446054270337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6069736471468362500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3d017b53a43a0141a6103e4d01170ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startPos: {x: 0, y: 0, z: 0}
+  endPos: {x: 0, y: 0, z: 0}
+  normalRadius: 0
+  increaseRadius: 0
+  normalCenter: {x: 0, y: 0, z: 0}
+  increaseCenter: {x: 0, y: 0, z: 0}
+  forceStopConsuming: 0
+  stopConsuming: 0
+--- !u!114 &2869067210639602857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6069736471468362500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd9a2021943a88488158180b25eb3ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _candleMesh: {fileID: 0}
+  _topCandleMesh: {fileID: 0}
+  _flameMat: {fileID: 0}
+  _flameTrail: {fileID: 0}
+  _fullWaxParticle: {fileID: 0}
+  _smokeParticles: {fileID: 0}
+  _extinguishParticles: {fileID: 0}
+  leftEyebrow: {fileID: 0}
+  rightEyebrow: {fileID: 0}
+  percentToHideEyebrow: 0
+  flameAudio: {fileID: 0}
+--- !u!114 &14890778307379599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6069736471468362500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d85d27a0663ddc24693057678f533042, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stats: {fileID: 0}
+  input: {fileID: 0}
+  waxpercentToApply: 0.75
 --- !u!1 &7226183740404860514
 GameObject:
   m_ObjectHideFlags: 0
@@ -232,7 +329,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 4095508292378950749}
+    m_TransformParent: {fileID: 6981406889981988824}
     m_Modifications:
     - target: {fileID: 2649476865833018563, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_Name
@@ -244,31 +341,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalScale.y
-      value: 100
+      value: 99.99998
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalScale.z
-      value: 100
+      value: 99.99998
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.000017055852
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -32.2
+      value: -32.20005
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.7
+      value: -1.7000177
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.725639
+      value: 0.7256389
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.68807566
+      value: -0.6880758
       objectReference: {fileID: 0}
     - target: {fileID: 3426963891419610745, guid: 1298a275b2d96c9489251fcbb7860514, type: 3}
       propertyPath: m_LocalRotation.y
@@ -865,7 +962,7 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 4941851485273810859, guid: bc0008b7d66590445b283de958b5fe8f, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7064176629575355497}
+      addedObject: {fileID: 6981406889981988824}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7363572460503153333, guid: bc0008b7d66590445b283de958b5fe8f, type: 3}
       insertIndex: -1
