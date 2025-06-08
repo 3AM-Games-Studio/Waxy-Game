@@ -64,7 +64,7 @@ namespace Player
         public MovementModule MovementModule;
         private CarryModule _carry;
         public PushModule PushModule;
-        private InteractionModule _interaction;
+        public InteractionModule InteractionModule;
         public PlayerEvents Events;
         #endregion
 
@@ -138,33 +138,33 @@ namespace Player
             UpdateManager.UnregisterFromFixedUpdate(this);
             UpdateManager.UnregisterFromLateUpdate(this);
         }
-        // public void Update()
-        // {
-        //     stateMachine.Update();
-        // }
-        //
-        // public void FixedUpdate()
-        // {
-        //     stateMachine.FixedUpdate();
-        // }
-        //
-        // public void LateUpdate()
-        // {
-        //     MovementModule.LateTick();
-        // }
-        public void OnUpdate()
+        public void Update()
         {
             stateMachine.Update();
+        }
+        
+        public void FixedUpdate()
+        {
+            stateMachine.FixedUpdate();
+        }
+        
+        public void LateUpdate()
+        {
+            MovementModule.LateTick();
+        }
+        public void OnUpdate()
+        {
+            // stateMachine.Update();
         }
 
         public void OnFixedUpdate()
         {
-            stateMachine.FixedUpdate();
+            // stateMachine.FixedUpdate();
         }
 
         public void OnLateUpdate()
         {
-            MovementModule.LateTick();
+            // MovementModule.LateTick();
         }
         
         #endregion
@@ -189,14 +189,14 @@ namespace Player
             var dead = new DeadState(this);
             #endregion
 
-            #region Transitions
+           #region Transitions
 
             // ─────────────────────────────
             // Sliding (más específico primero)
             At<Func<bool>>(sliding, falling, () => !MovementModule.IsGrounded());
             At<Func<bool>>(sliding, jumping, () => MovementModule.WantsToJump());
-            At<Func<bool>>(sliding, move, () => MovementModule.IsGrounded() && !MovementModule.IsGroundTooSteep() && input.Direction.sqrMagnitude > 0.01f);
-            At<Func<bool>>(sliding, idle, () => MovementModule.IsGrounded() && !MovementModule.IsGroundTooSteep() && input.Direction.sqrMagnitude <= 0.01f);
+            At<Func<bool>>(sliding, move, () => MovementModule.IsGrounded() && !MovementModule.IsGroundTooSteep() && input.HasMovementInput());
+            At<Func<bool>>(sliding, idle, () => MovementModule.IsGrounded() && !MovementModule.IsGroundTooSteep() && !input.HasMovementInput());
 
             // ─────────────────────────────
             // Falling
@@ -216,44 +216,51 @@ namespace Player
             // ─────────────────────────────
             // Grounded
             At<Func<bool>>(grounded, sliding, () => MovementModule.IsGroundTooSteep());
-            At<Func<bool>>(grounded, idle, () => input.Direction.sqrMagnitude < 0.01f);
-            At<Func<bool>>(grounded, move, () => input.Direction.sqrMagnitude >= 0.01f);
             At<Func<bool>>(grounded, pushing, () => PushModule.IsPushing);
+            At<Func<bool>>(grounded, idle, () => !input.HasMovementInput());
+            At<Func<bool>>(grounded, move, () => input.HasMovementInput());
 
             // ─────────────────────────────
             // Idle
             At<Func<bool>>(idle, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
             At<Func<bool>>(idle, jumping, () => MovementModule.WantsToJump());
             At<Func<bool>>(idle, falling, () => !MovementModule.IsGrounded());
-            At<Func<bool>>(idle, move, () => input.Direction.sqrMagnitude > 0.01f);
             At<Func<bool>>(idle, pushing, () => PushModule.IsPushing);
+            At<Func<bool>>(idle, interacting, WantsToInteract);
+            At<Func<bool>>(idle, move, () => input.HasMovementInput());
 
             // ─────────────────────────────
             // Move
             At<Func<bool>>(move, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
             At<Func<bool>>(move, jumping, () => MovementModule.WantsToJump());
             At<Func<bool>>(move, falling, () => !MovementModule.IsGrounded());
-            At<Func<bool>>(move, running, () => isRunKeyPressed && isCandleLit);
-            At<Func<bool>>(move, idle, () => input.Direction.sqrMagnitude <= 0.01f);
             At<Func<bool>>(move, pushing, () => PushModule.IsPushing);
+            At<Func<bool>>(move, interacting, WantsToInteract);
+            At<Func<bool>>(move, running, () => isRunKeyPressed && isCandleLit);
+            At<Func<bool>>(move, idle, () => !input.HasMovementInput());
+
             // ─────────────────────────────
             // Running
             At<Func<bool>>(running, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
             At<Func<bool>>(running, jumping, () => MovementModule.WantsToJump());
             At<Func<bool>>(running, falling, () => !MovementModule.IsGrounded());
-            At<Func<bool>>(running, move, () => input.Direction.sqrMagnitude > 0.01f && (!isRunKeyPressed || !isCandleLit));
-            At<Func<bool>>(running, idle, () => input.Direction.sqrMagnitude <= 0.01f && (!isRunKeyPressed || !isCandleLit));
+            At<Func<bool>>(running, move, () => input.HasMovementInput() && (!isRunKeyPressed || !isCandleLit));
+            At<Func<bool>>(running, idle, () => !input.HasMovementInput() && (!isRunKeyPressed || !isCandleLit));
 
-            // Carrying
-
+            // ─────────────────────────────
             // Pushing
             At<Func<bool>>(pushing, grounded, () => !PushModule.IsPushing);
             At<Func<bool>>(pushing, falling, () => !PushModule.IsPushing);
             At<Func<bool>>(pushing, idle, () => !PushModule.IsPushing);
             At<Func<bool>>(pushing, move, () => !PushModule.IsPushing);
-            // Interacting
+
+            // ─────────────────────────────
+            // Interacting (al finalizar el timer)
+            At<Func<bool>>(interacting, idle, () => interacting.IsFinished() && !input.HasMovementInput());
+            At<Func<bool>>(interacting, move, () => interacting.IsFinished() && input.HasMovementInput());
 
             // Dead
+
             #endregion
             
             //TODO delete after changing transitions
@@ -316,12 +323,22 @@ namespace Player
             PushModule.SetGrabInput(isButtonPressed);
         }
 
+        private bool wantsToInteract;
         private void HandleInteractInput(bool isButtonPressed)
         {
-            // _interaction.SetInteractInput(isButtonPressed);
+            if (isButtonPressed)
+                wantsToInteract = true;
+        }
+        public bool WantsToInteract()
+        {
+            bool temp = wantsToInteract;
+            wantsToInteract = false;
+            return temp;
         }
         [SerializeField] private bool isCandleLit = true; // Esto luego se conecta con CandleController
         private bool isRunKeyPressed;
+        public float interactionDuration;
+
         private void HandleRunInput(bool isButtonPressed)
         {
             isRunKeyPressed = isCandleLit && isButtonPressed;
@@ -335,20 +352,26 @@ namespace Player
             MovementModule = new MovementModule();
             _carry = new CarryModule();
             PushModule = new PushModule();
-            _interaction = new InteractionModule();
+            InteractionModule = new InteractionModule();
             Events = new PlayerEvents();
             
             MovementModule.Initialize(
                 this,input,camera);
             PushModule.Initialize(
                 this,input,camera);
+            InteractionModule.Initialize(
+                this);
         }
         #endregion
 
-        public void OnJumpStart()
+        #region Utilities
+
+        public void TeleportTo(Vector3 lastCheckpoint)
         {
-            
+            MovementModule.TeleportTo(lastCheckpoint);
         }
+
+        #endregion
     }
     
 }

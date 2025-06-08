@@ -1,4 +1,5 @@
 ﻿using AdvancedController;
+using ImprovedTimers;
 using Player.Modules;
 using UnityEngine;
 using UnityUtils.StateMachine;
@@ -152,12 +153,28 @@ namespace Player.States
         }
     }
     
-    
     public class InteractingState : BasePlayerState
     {
+        private readonly CountdownTimer _timer;
+        private readonly InteractionModule _interaction;
+        private PlayerController _controller;
+
         public InteractingState(PlayerController controller) : base(controller)
         {
+            _controller = controller;
+            _interaction = _controller.InteractionModule;
+            _timer = new CountdownTimer(_controller.interactionDuration);
         }
+
+        public override void OnEnter()
+        {
+            base.OnEnter();
+            _controller.MovementModule.Stop(); // frena al personaje
+            _interaction.ExecuteInteraction(_controller.gameObject);
+            _timer.Start();
+            _controller.MovementModule.Stop();
+        }
+        public bool IsFinished() => _timer.IsFinished;
     }
     public class DeadState : BasePlayerState
     {

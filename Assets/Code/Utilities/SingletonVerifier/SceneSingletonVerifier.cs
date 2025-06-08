@@ -1,5 +1,4 @@
-using UnityEditor;
-using UnityEditor.SceneManagement;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System;
@@ -14,7 +13,7 @@ namespace UnityUtils
 
     #if UNITY_EDITOR
     
-    [InitializeOnLoad]
+    [UnityEditor.InitializeOnLoad]
     public static class SceneSingletonVerifier
     {
         private const string ENABLED_PREF = "SingletonVerifier.Enabled";
@@ -31,7 +30,7 @@ namespace UnityUtils
         {
             LoadPrefs();
 #pragma warning disable UDR0001
-            EditorSceneManager.sceneSaving += OnSceneSaving;
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaving += OnSceneSaving;
 #pragma warning restore UDR0001
         }
 
@@ -49,7 +48,7 @@ namespace UnityUtils
             set
             {
                 _enabled = value;
-                EditorPrefs.SetBool(ENABLED_PREF, _enabled);
+                UnityEditor.EditorPrefs.SetBool(ENABLED_PREF, _enabled);
             }
         }
 
@@ -132,8 +131,8 @@ namespace UnityUtils
 
         private static void LoadPrefs()
         {
-            _enabled = EditorPrefs.GetBool(ENABLED_PREF, true);
-            string joined = EditorPrefs.GetString(TYPES_PREF, string.Empty);
+            _enabled = UnityEditor.EditorPrefs.GetBool(ENABLED_PREF, true);
+            string joined = UnityEditor.EditorPrefs.GetString(TYPES_PREF, string.Empty);
             TypeNames.Clear();
 
             if (!string.IsNullOrEmpty(joined))
@@ -145,7 +144,7 @@ namespace UnityUtils
         private static void SavePrefs()
         {
             string joined = string.Join("|", TypeNames);
-            EditorPrefs.SetString(TYPES_PREF, joined);
+            UnityEditor.EditorPrefs.SetString(TYPES_PREF, joined);
         }
 
         private static bool IsPersistentSingleton(Type type)

@@ -18,7 +18,11 @@ namespace AdvancedController {
         public float onAirRotationSpeedMultiplier = 0.75f;
 
         private Transform tr;
-        
+
+        private void Awake()
+        {
+            UpdateManager.RegisterToLateUpdate(this);
+        }
 
         private void OnEnable()
         {

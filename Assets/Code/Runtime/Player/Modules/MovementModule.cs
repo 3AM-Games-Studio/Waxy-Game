@@ -319,6 +319,17 @@ namespace Player.Modules
             _mover.SetVelocity(momentum);
             _savedVelocity = momentum;
         }
+
+        public void Stop()
+        {
+            _mover.SetVelocity(Vector3.zero);
+        }
+
+        public void TeleportTo(Vector3 lastCheckpoint)
+        {
+            _mover.SetVelocity(Vector3.zero);
+            _rb.MovePosition(lastCheckpoint);
+        }
     }
     
 }
