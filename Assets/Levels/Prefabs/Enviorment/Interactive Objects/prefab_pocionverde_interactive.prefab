@@ -22,7 +22,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7db38e647fd038a4e820d2439b346c53, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.31
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7db38e647fd038a4e820d2439b346c53, type: 3}
       propertyPath: m_LocalPosition.y
@@ -30,7 +30,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7db38e647fd038a4e820d2439b346c53, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 16.68
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7db38e647fd038a4e820d2439b346c53, type: 3}
       propertyPath: m_LocalRotation.w
@@ -60,9 +60,13 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1068034047256555846, guid: 7db38e647fd038a4e820d2439b346c53, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 7db38e647fd038a4e820d2439b346c53, type: 3}
       propertyPath: m_Name
-      value: Mesh_pocion_1
+      value: prefab_pocionverde_interactive
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

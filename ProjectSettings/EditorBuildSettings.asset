@@ -5,9 +5,12 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Levels/Scenes/QAs/Rochi/Rochi-QA-Level1.2.unity
+    guid: 4f6961e66ef0faa4a9b8d688d9daad35
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 713cabb1887581b47a9f61043a684b58, type: 3}
   m_UseUCBPForAssetBundles: 0

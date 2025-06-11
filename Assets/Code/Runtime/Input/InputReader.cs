@@ -109,4 +109,6 @@ public class InputReader : ScriptableObject, IPlayerActions, IInputReader {
                 break;
         }
     }
+
+    public bool HasMovementInput() => Direction.sqrMagnitude >= 0.01f;
 }
