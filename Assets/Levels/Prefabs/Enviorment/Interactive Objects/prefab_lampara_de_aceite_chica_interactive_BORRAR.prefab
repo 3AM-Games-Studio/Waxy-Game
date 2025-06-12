@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3229466949090336351}
   m_Layer: 0
-  m_Name: prefab_lampara_de_aceite_chica_interactive
+  m_Name: prefab_lampara_de_aceite_chica_interactive_BORRAR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
