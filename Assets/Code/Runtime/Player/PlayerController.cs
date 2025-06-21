@@ -36,6 +36,9 @@ namespace Player
         [Tooltip("Duración máxima del salto si se mantiene la tecla presionada.")]
         public float jumpDuration = 0.2f;
         
+        [Tooltip("Proporción mínima del salto que se debe ejecutar antes de permitir caída.")]
+        [Range(0f, 1f)]
+        public float minJumpRatio = 0.75f;
         [Tooltip("Fricción horizontal aplicada mientras está en el aire.")]
         public float airFriction = 0.5f;
         
@@ -56,7 +59,7 @@ namespace Player
         
         public float CurrentSpeed { get; private set; }
         public Transform MeshPivot;
-
+        public Vector3 MeshFoward => MeshPivot.forward;
         #endregion
         
         #region Modules
@@ -206,7 +209,7 @@ namespace Player
             // ─────────────────────────────
             // Rising
             At<Func<bool>>(rising, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
-            At<Func<bool>>(rising, falling, () => MovementModule.ShouldStartFalling() || MovementModule.HitCeiling());
+            At<Func<bool>>(rising, falling, () => MovementModule.ShouldStartFalling() || MovementModule.HitCeiling()); 
 
             // ─────────────────────────────
             // Jumping
@@ -369,6 +372,37 @@ namespace Player
         public void TeleportTo(Vector3 lastCheckpoint)
         {
             MovementModule.TeleportTo(lastCheckpoint);
+        }
+
+        public float upDis;
+        public float fowardDis;
+        public LayerMask WallMask;
+        private void OnDrawGizmos()
+        {
+            return;
+            if (MeshPivot == null) return;
+
+            // const float rayHeightOffset = 0.9f;
+            // const float rayLength = 5f;
+
+            // 1. Origen del raycast: posición del cuerpo + altura
+            Vector3 origin = transform.position + Vector3.up * upDis;
+            Vector3 direction = MeshPivot.forward;
+
+            // 2. Dibujar línea de referencia
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(origin, origin + direction * fowardDis);
+
+            // 3. Raycast real con máscara
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, fowardDis, WallMask, QueryTriggerInteraction.Ignore))
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawLine(origin, hit.point);
+                Gizmos.DrawSphere(hit.point, 0.05f);
+
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawRay(hit.point, hit.normal * 0.5f);
+            }
         }
 
         #endregion
