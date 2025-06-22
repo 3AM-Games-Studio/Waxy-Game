@@ -15,7 +15,6 @@ using UnityEngine;
         public Vector3 grabOffset;
         private Quaternion rotationOffset;
         private Rigidbody rb;
-        private bool isAttached;
         public Collider notTriggerCollider;
         public List<RigidbodyConstraints> constraints;
         public Action DetachOnStress;
@@ -51,7 +50,6 @@ using UnityEngine;
             rotationOffset = Quaternion.Inverse(_meshPivot.rotation) * transform.rotation;
 
             rb.mass = pushMass;
-            isAttached = true;
             foreach (RigidbodyConstraints constraint in constraints)
             {
                 rb.constraints = rb.constraints | constraint;
@@ -64,7 +62,6 @@ using UnityEngine;
         {
             _meshPivot = null;
             rb.mass = defaultMass;
-            isAttached = false;
             rb.constraints = RigidbodyConstraints.None;
             UpdateManager.UnregisterFromFixedUpdate(this);
         }

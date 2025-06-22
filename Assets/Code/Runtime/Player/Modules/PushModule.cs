@@ -40,7 +40,7 @@ namespace Player.Modules
             Vector3 toBox = _candidateBox.transform.position - _playerTransform.position;
             toBox.y = 0f;
 
-            Vector3 playerForward = _controller.MeshFoward;
+            Vector3 playerForward = _controller.MeshForward;
             playerForward.y = 0f;
 
             float angle = Vector3.Angle(playerForward.normalized, toBox.normalized);
@@ -156,8 +156,9 @@ namespace Player.Modules
 
             if (Physics.Raycast(rayOrigin, rayDirection, out hit, 5f, mask, QueryTriggerInteraction.Ignore))
             {
+#if UNITY_EDITOR
                 Debug.Log($"Ray hit: {hit.collider.name} (layer {hit.collider.gameObject.layer})");
-
+#endif
                 bool hitValid = hit.collider.transform.root == _candidateBox.transform.root;
                 Debug.DrawRay(rayOrigin, rayDirection * hit.distance, hitValid ? Color.green : Color.yellow, 1f);
 

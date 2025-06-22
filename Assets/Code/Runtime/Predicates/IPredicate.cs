@@ -7,15 +7,38 @@ namespace UnityUtils {
     public interface IPredicate {
         bool Evaluate();
     }
+    public class And : IPredicate
+    {
+        private readonly List<IPredicate> _rules = new List<IPredicate>();
 
-    public class And : IPredicate {
-        List<IPredicate> rules = new List<IPredicate>();
-        public bool Evaluate() => rules.All(r => r.Evaluate());
+        public bool Evaluate()
+        {
+            foreach (var rule in _rules)
+            {
+                if (!rule.Evaluate())
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
-    public class Or : IPredicate {
-        List<IPredicate> rules = new List<IPredicate>();
-        public bool Evaluate() => rules.Any(r => r.Evaluate());
+    public class Or : IPredicate
+    {
+        private List<IPredicate> rules = new List<IPredicate>();
+
+        public bool Evaluate()
+        {
+            foreach (var rule in rules)
+            {
+                if (rule.Evaluate())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public class Not : IPredicate {

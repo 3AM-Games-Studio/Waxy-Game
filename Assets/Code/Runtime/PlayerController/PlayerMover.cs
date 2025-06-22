@@ -27,7 +27,7 @@ namespace AdvancedController {
         [Header("Multi Raycast Settings")]
         [SerializeField] private float sensorOffsetDistance = 0.3f;
         private RaycastSensor[] sensors = new RaycastSensor[5];
-        private readonly Vector3[] sensorOffsets = {
+        private readonly Vector3[] _sensorOffsets = {
             Vector3.zero,
             Vector3.forward,
             Vector3.back,
@@ -47,8 +47,8 @@ namespace AdvancedController {
             }
         }
         
-        void LateUpdate() {
 #if UNITY_EDITOR
+        void LateUpdate() {
             if (isInDebugMode) {
                 // sensor.DrawDebug();
                 foreach (var sensor in sensors)
@@ -58,8 +58,8 @@ namespace AdvancedController {
             }
             
          
-#endif
         }
+#endif
         private Vector3 groundNormal = Vector3.up;
         public void CheckForGround() {
             if (currentLayer != gameObject.layer)
@@ -167,7 +167,7 @@ namespace AdvancedController {
                 if (sensors[i] == null)
                     sensors[i] = new RaycastSensor(tr);
 
-                Vector3 worldOffset = tr.TransformDirection(sensorOffsets[i]) * sensorOffsetDistance;
+                Vector3 worldOffset = tr.TransformDirection(_sensorOffsets[i]) * sensorOffsetDistance;
                 sensors[i].SetCastOrigin(col.bounds.center + worldOffset);
                 sensors[i].SetCastDirection(RaycastSensor.CastDirection.Down);
                 sensors[i].castLength = baseSensorRange;

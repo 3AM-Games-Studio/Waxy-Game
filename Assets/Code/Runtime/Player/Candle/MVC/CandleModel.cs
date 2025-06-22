@@ -202,8 +202,8 @@ namespace Player.Candle
                 _ => 0
             };
             if (!_flameCollider) return;
-            _flameCollider.radius = type.Equals(FlameType.Increase) ? increaseRadius : normalRadius;
-            _flameCollider.center = type.Equals(FlameType.Increase) ?  increaseCenter :  normalCenter;
+            _flameCollider.radius = type == FlameType.Increase ? increaseRadius : normalRadius;
+            _flameCollider.center = type == FlameType.Increase ?  increaseCenter :  normalCenter;
             FlameUpdate  = DefaultFlameUpdate;
         }
         #endregion

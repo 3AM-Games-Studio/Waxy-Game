@@ -25,9 +25,14 @@ namespace UnityUtils.StateMachine
             currentNode.State?.Update();
         }
 
-        static void ResetActionPredicateFlags(IEnumerable<Transition> transitions) {
-            foreach (var transition in transitions.OfType<Transition<ActionPredicate>>()) {
-                transition.condition.flag = false;
+        static void ResetActionPredicateFlags(IEnumerable<Transition> transitions)
+        {
+            foreach (var transition in transitions)
+            {
+                if (transition is Transition<ActionPredicate> typedTransition)
+                {
+                    typedTransition.condition.flag = false;
+                }
             }
         }
         

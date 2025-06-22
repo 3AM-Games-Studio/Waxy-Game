@@ -12,7 +12,7 @@ public class MOCK_Flamable : MonoBehaviour, IFlameable
     public UnityEvent OnFlameOnCollide;
     public void Interact(float flameMulti, FlameType flameState)
     {
-        if(flameState.Equals(FlameType.Off))return;
+        if(flameState == FlameType.Off)return;
         OnFlameOnCollide.Invoke();
     }
 }

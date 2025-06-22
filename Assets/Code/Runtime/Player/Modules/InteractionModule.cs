@@ -13,11 +13,13 @@ namespace Player.Modules
 
         public void ExecuteInteraction(GameObject sender)
         {
-            var colliders = Physics.OverlapSphere(_transform.position + _transform.forward + Vector3.up, 1f);
+            var position = _transform.position + _transform.forward + Vector3.up;
+            Collider[] hitColliders = new Collider[5];
+            int numColliders = Physics.OverlapSphereNonAlloc(position, 1f, hitColliders);
             
-            foreach (var col in colliders)
+            for (int i = 0; i < numColliders; i++)
             {
-                if(col.TryGetComponent(out IInteract interact))
+                if(hitColliders[i].TryGetComponent(out IInteract interact))
                     interact.Interact(sender);
             }
         }

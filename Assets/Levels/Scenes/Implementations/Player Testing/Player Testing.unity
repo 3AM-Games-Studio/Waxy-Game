@@ -4314,6 +4314,10 @@ PrefabInstance:
       propertyPath: MeshPivot
       value: 
       objectReference: {fileID: 1588869531}
+    - target: {fileID: 6617663062572292289, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: interactionDuration
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
