@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using System.Threading.Tasks;
 using Core;
 using UnityEngine;
 
@@ -37,8 +38,10 @@ using UnityEngine;
             UpdateManager.UnregisterFromFixedUpdate(this);
         }
 
-        public void Attach(Transform controller)
+        public async void Attach(Transform controller)
         {
+            await Task.Yield();
+            await Task.Yield();
             _meshPivot = controller;
 
             // Position in player’s local space

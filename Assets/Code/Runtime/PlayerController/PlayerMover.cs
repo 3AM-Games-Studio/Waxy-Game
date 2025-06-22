@@ -13,7 +13,7 @@ namespace AdvancedController {
         Rigidbody rb;
         Transform tr;
         CapsuleCollider col;
-        RaycastSensor sensor;
+        // RaycastSensor sensor;
         
         bool isGrounded;
         float baseSensorRange;
@@ -23,6 +23,17 @@ namespace AdvancedController {
         [Header("Sensor Settings:")]
         [SerializeField] bool isInDebugMode;
         bool isUsingExtendedSensorRange = true; // Use extended range for smoother ground transitions
+        
+        [Header("Multi Raycast Settings")]
+        [SerializeField] private float sensorOffsetDistance = 0.3f;
+        private RaycastSensor[] sensors = new RaycastSensor[5];
+        private readonly Vector3[] sensorOffsets = {
+            Vector3.zero,
+            Vector3.forward,
+            Vector3.back,
+            Vector3.left,
+            Vector3.right
+        };
         #endregion
 
         void Awake() {
@@ -37,35 +48,72 @@ namespace AdvancedController {
         }
         
         void LateUpdate() {
+#if UNITY_EDITOR
             if (isInDebugMode) {
-                sensor.DrawDebug();
+                // sensor.DrawDebug();
+                foreach (var sensor in sensors)
+                {
+                    sensor.DrawDebug();
+                }
             }
+            
+         
+#endif
         }
-
+        private Vector3 groundNormal = Vector3.up;
         public void CheckForGround() {
-            if (currentLayer != gameObject.layer) {
+            if (currentLayer != gameObject.layer)
                 RecalculateSensorLayerMask();
-            }
-            
+
             currentGroundAdjustmentVelocity = Vector3.zero;
-            sensor.castLength = isUsingExtendedSensorRange 
-                ? baseSensorRange + colliderHeight * tr.localScale.x * stepHeightRatio
-                : baseSensorRange;
-            sensor.Cast();
-            
-            isGrounded = sensor.HasDetectedHit();
+            isGrounded = false;
+
+            float closestDistance = float.MaxValue;
+            Vector3 bestNormal = Vector3.up;
+
+            foreach (var s in sensors) {
+                s.Cast();
+                if (s.HasDetectedHit()) {
+                    float dist = s.GetDistance();
+                    if (dist < closestDistance) {
+                        closestDistance = dist;
+                        bestNormal = s.GetNormal();
+                        isGrounded = true;
+                    }
+                }
+            }
+
             if (!isGrounded) return;
-            
-            float distance = sensor.GetDistance();
+            groundNormal = bestNormal;
             float upperLimit = colliderHeight * tr.localScale.x * (1f - stepHeightRatio) * 0.5f;
             float middle = upperLimit + colliderHeight * tr.localScale.x * stepHeightRatio;
-            float distanceToGo = middle - distance;
-            
+            float distanceToGo = middle - closestDistance;
             currentGroundAdjustmentVelocity = tr.up * (distanceToGo / Time.fixedDeltaTime);
         }
+        // public void CheckForGround() {
+        //     if (currentLayer != gameObject.layer) {
+        //         RecalculateSensorLayerMask();
+        //     }
+        //     
+        //     currentGroundAdjustmentVelocity = Vector3.zero;
+        //     sensor.castLength = isUsingExtendedSensorRange 
+        //         ? baseSensorRange + colliderHeight * tr.localScale.x * stepHeightRatio
+        //         : baseSensorRange;
+        //     sensor.Cast();
+        //     
+        //     isGrounded = sensor.HasDetectedHit();
+        //     if (!isGrounded) return;
+        //     
+        //     float distance = sensor.GetDistance();
+        //     float upperLimit = colliderHeight * tr.localScale.x * (1f - stepHeightRatio) * 0.5f;
+        //     float middle = upperLimit + colliderHeight * tr.localScale.x * stepHeightRatio;
+        //     float distanceToGo = middle - distance;
+        //     
+        //     currentGroundAdjustmentVelocity = tr.up * (distanceToGo / Time.fixedDeltaTime);
+        // }
         
         public bool IsGrounded() => isGrounded;
-        public Vector3 GetGroundNormal() => sensor.GetNormal();
+        public Vector3 GetGroundNormal() => groundNormal;
         
         // NOTE: Older versions of Unity use rb.velocity instead
         public void SetVelocity(Vector3 velocity) => rb.linearVelocity = velocity + currentGroundAdjustmentVelocity;
@@ -96,21 +144,36 @@ namespace AdvancedController {
             RecalibrateSensor();
         }
 
+        // void RecalibrateSensor() {
+        //     sensor ??= new RaycastSensor(tr);
+        //     
+        //     sensor.SetCastOrigin(col.bounds.center);
+        //     // sensor.SetCastOrigin(tr.position + tr.up * (col.height * 0.5f));
+        //     sensor.SetCastDirection(RaycastSensor.CastDirection.Down);
+        //     RecalculateSensorLayerMask();
+        //     
+        //     const float safetyDistanceFactor = 0.001f; // Small factor added to prevent clipping issues when the sensor range is calculated
+        //     
+        //     float length = colliderHeight * (1f - stepHeightRatio) * 0.5f + colliderHeight * stepHeightRatio;
+        //     baseSensorRange = length * (1f + safetyDistanceFactor) * tr.localScale.x;
+        //     sensor.castLength = length * tr.localScale.x;
+        // }
         void RecalibrateSensor() {
-            sensor ??= new RaycastSensor(tr);
-            
-            sensor.SetCastOrigin(col.bounds.center);
-            // sensor.SetCastOrigin(tr.position + tr.up * (col.height * 0.5f));
-            sensor.SetCastDirection(RaycastSensor.CastDirection.Down);
             RecalculateSensorLayerMask();
-            
-            const float safetyDistanceFactor = 0.001f; // Small factor added to prevent clipping issues when the sensor range is calculated
-            
-            float length = colliderHeight * (1f - stepHeightRatio) * 0.5f + colliderHeight * stepHeightRatio;
-            baseSensorRange = length * (1f + safetyDistanceFactor) * tr.localScale.x;
-            sensor.castLength = length * tr.localScale.x;
-        }
 
+            baseSensorRange = (colliderHeight * (1f - stepHeightRatio) * 0.5f + colliderHeight * stepHeightRatio) * 1.01f * tr.localScale.x;
+
+            for (int i = 0; i < sensors.Length; i++) {
+                if (sensors[i] == null)
+                    sensors[i] = new RaycastSensor(tr);
+
+                Vector3 worldOffset = tr.TransformDirection(sensorOffsets[i]) * sensorOffsetDistance;
+                sensors[i].SetCastOrigin(col.bounds.center + worldOffset);
+                sensors[i].SetCastDirection(RaycastSensor.CastDirection.Down);
+                sensors[i].castLength = baseSensorRange;
+                sensors[i].layermask = currentLayer; // usar variable fija si querés
+            }
+        }
         void RecalculateSensorLayerMask() {
             int objectLayer = gameObject.layer;
             int layerMask = Physics.AllLayers;
@@ -120,12 +183,18 @@ namespace AdvancedController {
                     layerMask &= ~(1 << i);
                 }
             }
-            
+
             int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
             layerMask &= ~(1 << ignoreRaycastLayer);
-            
-            sensor.layermask = layerMask;
+
             currentLayer = objectLayer;
+
+            // Asignar el layermask a cada sensor
+            foreach (var s in sensors) {
+                if (s != null) {
+                    s.layermask = layerMask;
+                }
+            }
         }
         public Vector3 GetVelocity() => rb.linearVelocity;
     }

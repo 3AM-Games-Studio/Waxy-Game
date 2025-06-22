@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using AdvancedController;
 using UnityEngine;
 
@@ -17,7 +18,8 @@ namespace Player.Modules
         private bool _isPushing;
         private InputReader _input;
         private Transform _playerTransform;
-
+        private float _pushCooldown = 0f;
+        private const float MinPushTime = 0.1f;
         private Vector3 _playerMoveDirection;
         public bool ShouldRotateMesh { get; private set; }
         public Vector3 DesiredMeshForward { get; private set; }
@@ -47,38 +49,50 @@ namespace Player.Modules
 
         public void FixedTick()
         {
-
+            // Si no está empujando, salir normalmente
             if (!_isPushing || !_currentBox)
             {
                 StopPush();
                 return;
             }
 
-            Vector3 playerForward = Vector3.ProjectOnPlane(_playerTransform.forward, Vector3.up).normalized;
-            Vector3 cameraForward = Vector3.ProjectOnPlane(_camera.forward, Vector3.up).normalized;
-
-            float angle = Vector3.SignedAngle(playerForward, cameraForward, Vector3.up);
-            float absAngle = Mathf.Abs(angle);
+// Solo si está empujando, esperá que pase el cooldown antes de evaluar lógica de salida
+            if (_pushCooldown > 0f)
+            {
+                _pushCooldown -= Time.fixedDeltaTime;
+                return;
+            }
 
             Vector2 inputDir = _input.Direction;
-
-            ShouldRotateMesh = false;
-            DesiredMeshForward = playerForward;
-
-            bool wantsToRotate = absAngle > 15f && Mathf.Abs(inputDir.y) > 0.1f;
-            ShouldRotateMesh = wantsToRotate;
-            DesiredMeshForward = wantsToRotate ? cameraForward : playerForward;
-
-            const float penaltyStartAngle = 5f;
-            const float penaltyMax = 0.1f;
-            float t = Mathf.InverseLerp(penaltyStartAngle, 180f, absAngle);
-            float penalty = Mathf.Lerp(1f, penaltyMax, t);
-
-            _controller.MovementModule.SetRotationSpeedMultiplier(penalty);
-
             Vector3 forward = Vector3.ProjectOnPlane(_controller.MeshPivot.forward, Vector3.up).normalized;
             Vector3 right = Vector3.ProjectOnPlane(_controller.MeshPivot.right, Vector3.up).normalized;
-            _playerMoveDirection = (forward * _input.Direction.y + right * _input.Direction.x).normalized;
+            Vector3 desiredMove = (forward * inputDir.y + right * inputDir.x).normalized;
+
+            _playerMoveDirection = desiredMove;
+
+            // Si no hay input, no penalizamos ni rotamos
+            if (desiredMove.sqrMagnitude < 0.01f)
+            {
+                ShouldRotateMesh = false;
+                DesiredMeshForward = _controller.MeshPivot.forward;
+                _controller.MovementModule.SetRotationSpeedMultiplier(1f);
+                return;
+            }
+
+            Vector3 cameraForward = Vector3.ProjectOnPlane(_camera.forward, Vector3.up).normalized;
+            float angle = Vector3.Angle(desiredMove, cameraForward); // sin signo
+
+            // Penalización por desalineación
+            const float penaltyStartAngle = 5f;
+            const float penaltyMax = 0.1f;
+            float t = Mathf.InverseLerp(penaltyStartAngle, 180f, angle);
+            float penalty = Mathf.Lerp(1f, penaltyMax, t);
+            // _controller.MovementModule.SetRotationSpeedMultiplier(penalty);
+
+            // Si hay mucho ángulo y se está moviendo hacia adelante, forzar rotación del mesh
+            bool wantsToRotate = angle > 15f && Mathf.Abs(inputDir.y) > 0.1f;
+            ShouldRotateMesh = wantsToRotate;
+            DesiredMeshForward = wantsToRotate ? cameraForward : _controller.MeshPivot.forward;
         }
 
         public void OnTriggerEnter(Collider other)
@@ -117,11 +131,11 @@ namespace Player.Modules
             _isPushing = false;
         }
 
-        private void StartPush()
+        private async void StartPush()
         {
-            const float minDistance = 0.75f;
+            const float minDistance = 1.25f;
             const float raycastHeightOffset = 0.75f;
-
+            _pushCooldown = MinPushTime;
             // 1. Rotar MeshPivot hacia el centro de la caja
             Vector3 toBox = _candidateBox.transform.position - _controller.MeshPivot.position;
             toBox.y = 0f;
@@ -161,7 +175,7 @@ namespace Player.Modules
             // 3. Si está demasiado cerca, mover en la dirección opuesta a la superficie
             if (detectedDistance < minDistance)
             {
-                float backAmount = minDistance - detectedDistance;
+                float backAmount = minDistance - detectedDistance ;
                 Vector3 moveBack = pushNormal * backAmount;
 
                 Vector3 newPos = _playerTransform.position + moveBack;
@@ -169,12 +183,12 @@ namespace Player.Modules
 
                 _controller.MovementModule.TeleportTo(newPos);
             }
-
             // 4. Conectar empuje
             _isPushing = true;
             _currentBox = _candidateBox;
             _candidateBox = null;
 
+            await Task.Yield();
             _currentBox.Attach(_controller.MeshPivot);
             _currentBox.DetachOnStress = StopPush;
         }
