@@ -45,7 +45,19 @@ namespace Player.Candle
         //     EventManager.Subscribe(Events.LevelReset,ResetCandle);
         }
 
-        
+#if UNITY_EDITOR
+        public bool onDebugMode;
+        public FlameType type;
+        public float flamemultitest;
+        private void OnValidate()
+        {
+            if(!onDebugMode)return;
+            if(!TryGetComponent(out _model)) Debug.LogError("No Model");
+            if(!TryGetComponent(out _view)) Debug.LogError("No View");
+            _model.ForceFlameTo(type);
+            _view.UpdateFlame(flamemultitest,type);
+        }
+#endif
         private void OnDisable()
         {
             input.Run -= Increase;

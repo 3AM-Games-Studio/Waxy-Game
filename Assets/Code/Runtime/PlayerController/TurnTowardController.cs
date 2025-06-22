@@ -21,7 +21,7 @@ namespace AdvancedController {
 
         private void Awake()
         {
-            UpdateManager.RegisterToLateUpdate(this);
+            // UpdateManager.RegisterToLateUpdate(this);
         }
 
         private void OnEnable()
@@ -42,6 +42,7 @@ namespace AdvancedController {
         void Start() {
             tr = transform;
             _currentRotation = NormalRotation;
+            if(!controller) controller = GetComponentInParent<Player.PlayerController>();
             UpdateManager.RegisterToLateUpdate(this);
         }
         

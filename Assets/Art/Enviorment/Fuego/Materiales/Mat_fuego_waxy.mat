@@ -52,6 +52,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _BoolAnim: 0
+    - _DirectionDivider: 1000
     - _FlameDiractionPower: 10000
     - _Float: 0.01
     - _LifeScalar: 1

@@ -61,7 +61,9 @@ namespace Player.Modules
 
         public bool ShouldStartFalling()
         {
-            return jumpTimer.IsFinished || jumpKeyWasLetGo;
+            float minDuration = _controller.jumpDuration * _controller.minJumpRatio;
+            bool minTimePassed = jumpTimer.Progress <= 1f - minDuration;
+            return (minTimePassed && jumpKeyWasLetGo) || jumpTimer.IsFinished;
         }
         public Vector3 GetMovementVelocity() => _savedVelocity;
         public bool IsGrounded()
@@ -118,7 +120,7 @@ namespace Player.Modules
 
     
             jumpTimer.Start();
-            groundIgnoreTimer.Start(); // ← esto es crucial
+            groundIgnoreTimer.Start();
     
             jumpInputIsLocked = true;
             _controller.Events?.OnJump?.Invoke(momentum);

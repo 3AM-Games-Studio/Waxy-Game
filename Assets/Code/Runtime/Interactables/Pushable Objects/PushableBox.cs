@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using System.Threading.Tasks;
 using Core;
 using UnityEngine;
 
@@ -9,20 +10,27 @@ using UnityEngine;
         [Header("Mass Settings")]
         public float defaultMass = 100f;
         public float pushMass = 5f;
-        public float stressThreshold;
-        public Transform _meshPivot; // The mesh pivot, child of player
+        public float stressThreshold = 0.75f;
+        private Transform _meshPivot; // The mesh pivot, child of player
         public Vector3 grabOffset;
         private Quaternion rotationOffset;
         private Rigidbody rb;
         private bool isAttached;
+        public Collider notTriggerCollider;
         public List<RigidbodyConstraints> constraints;
         public Action DetachOnStress;
         void Awake()
         {
             rb = GetComponent<Rigidbody>();
+            
             rb.mass = defaultMass;
             rb.useGravity = true;
             rb.isKinematic = false;
+        }
+
+        private void OnValidate()
+        {
+            if(notTriggerCollider != null && notTriggerCollider.isTrigger) notTriggerCollider = null;
         }
 
         private void OnDestroy()
@@ -30,8 +38,10 @@ using UnityEngine;
             UpdateManager.UnregisterFromFixedUpdate(this);
         }
 
-        public void Attach(Transform controller)
+        public async void Attach(Transform controller)
         {
+            await Task.Yield();
+            await Task.Yield();
             _meshPivot = controller;
 
             // Position in player’s local space

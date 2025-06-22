@@ -19,8 +19,8 @@ namespace Player.Candle
         [SerializeField] private float normalRadius;
         [SerializeField] private float increaseRadius;
         [SerializeField] private Vector3 normalCenter, increaseCenter;
-        private SphereCollider _flameCollider;
-        
+        [SerializeField]private SphereCollider _flameCollider;
+
         private void Awake()
         {
             // if(!onWaxPercent || !flame) Debug.LogError("Missing Candle Model Events");
