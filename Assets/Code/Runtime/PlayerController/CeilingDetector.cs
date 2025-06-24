@@ -10,17 +10,20 @@ namespace AdvancedController {
         void OnCollisionEnter(Collision collision) => CheckForContact(collision);
         void OnCollisionStay(Collision collision) => CheckForContact(collision);
 
-        void CheckForContact(Collision collision) {
-            if (collision.contacts.Length == 0) return;
+        void CheckForContact(Collision collision)
+        {
+            ContactPoint[] contacts = new ContactPoint[10];
+            var contactsAmount = collision.GetContacts(contacts);
+            if (contactsAmount == 0) return;
             
-            float angle = Vector3.Angle(-transform.up, collision.contacts[0].normal);
+            float angle = Vector3.Angle(-transform.up, contacts[0].normal);
 
             if (angle < ceilingAngleLimit) {
                 ceilingWasHit = true;
             }
 
             if (isInDebugMode) {
-                Debug.DrawRay(collision.contacts[0].point, collision.contacts[0].normal, Color.red, debugDrawDuration);
+                Debug.DrawRay(contacts[0].point, contacts[0].normal, Color.red, debugDrawDuration);
             }
         }
         

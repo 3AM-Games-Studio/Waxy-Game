@@ -21,6 +21,12 @@ public class MOCK_ShutBook : MonoBehaviour
       CandleController.OnFlameTurnOn -= OnCandleControllerOnOnFlameTurnOn;
    }
 
+   private void OnDestroy()
+   {
+      
+      CandleController.OnFlameTurnOn -= OnCandleControllerOnOnFlameTurnOn;
+   }
+
    private void OnCandleControllerOnOnFlameTurnOn(bool on)
    {
       isFireOn = on;

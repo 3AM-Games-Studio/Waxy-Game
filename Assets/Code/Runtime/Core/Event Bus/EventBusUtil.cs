@@ -68,7 +68,6 @@ namespace Event_Bus
             {
                 var busType = typedef.MakeGenericType(eventType);
                 eventBusTypes.Add(busType);
-                Debug.Log($"Initialized EventBus<{eventType.Name}>");
             }
 
             return eventBusTypes;
@@ -79,7 +78,6 @@ namespace Event_Bus
         /// </summary>
         public static void ClearAllBuses()
         {
-            Debug.Log("Clearing all buses...");
             for (int i = 0; i < EventBusTypes.Count; i++)
             {
                 var busType = EventBusTypes[i];

@@ -40,7 +40,7 @@ namespace Player.Modules
             Vector3 toBox = _candidateBox.transform.position - _playerTransform.position;
             toBox.y = 0f;
 
-            Vector3 playerForward = _controller.MeshFoward;
+            Vector3 playerForward = _controller.MeshForward;
             playerForward.y = 0f;
 
             float angle = Vector3.Angle(playerForward.normalized, toBox.normalized);
@@ -87,7 +87,7 @@ namespace Player.Modules
             const float penaltyMax = 0.1f;
             float t = Mathf.InverseLerp(penaltyStartAngle, 180f, angle);
             float penalty = Mathf.Lerp(1f, penaltyMax, t);
-            // _controller.MovementModule.SetRotationSpeedMultiplier(penalty);
+            _controller.MovementModule.SetRotationSpeedMultiplier(1f);
 
             // Si hay mucho ángulo y se está moviendo hacia adelante, forzar rotación del mesh
             bool wantsToRotate = angle > 15f && Mathf.Abs(inputDir.y) > 0.1f;
@@ -156,8 +156,9 @@ namespace Player.Modules
 
             if (Physics.Raycast(rayOrigin, rayDirection, out hit, 5f, mask, QueryTriggerInteraction.Ignore))
             {
+#if UNITY_EDITOR
                 Debug.Log($"Ray hit: {hit.collider.name} (layer {hit.collider.gameObject.layer})");
-
+#endif
                 bool hitValid = hit.collider.transform.root == _candidateBox.transform.root;
                 Debug.DrawRay(rayOrigin, rayDirection * hit.distance, hitValid ? Color.green : Color.yellow, 1f);
 

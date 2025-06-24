@@ -74,6 +74,7 @@ namespace Player.States
         public override void OnExit()
         {
             // animationController.HandleJump(false);
+            controller.MovementModule.ResetCeiling();
         }
     }
     public class FallingState : BasePlayerState
@@ -94,6 +95,10 @@ namespace Player.States
         public RisingState(PlayerController controller) : base(controller) { }
 
         public override void FixedUpdate() => controller.MovementModule.ApplyAirMovement();
+        public override void OnExit()
+        {
+            controller.MovementModule.ResetCeiling();
+        }
     }
 
     public class SlidingState : BasePlayerState
@@ -109,9 +114,26 @@ namespace Player.States
     }
     public class GroundedState : BasePlayerState
     {
+        private CountdownTimer holdTimer;
+        public bool IsReadyToExit { get; private set; }
         public GroundedState(PlayerController controller) : base(controller)
         {
+            holdTimer = new CountdownTimer(.1f);
+            IsReadyToExit = true;
+            holdTimer.OnTimerStart += () => IsReadyToExit = false;
+            holdTimer.OnTimerStop += () => IsReadyToExit = true;
         }
+
+        public override void OnEnter()
+        {
+            holdTimer.Start();
+        }
+
+        public override void FixedUpdate()
+        {
+            controller.MovementModule.OnGroundContactRegained();
+        }
+        
     }
     public class CarryingState : BasePlayerState
     {

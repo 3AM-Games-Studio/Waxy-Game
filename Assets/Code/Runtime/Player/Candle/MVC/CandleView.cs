@@ -56,7 +56,7 @@ namespace Player.Candle
                 _smokeParticles.Stop();
             });
             CandleController.AddFlameEvents(FlameType.Increase,_smokeParticles.Play);
-            if (stats.StartingFlame.Equals(FlameType.Off))
+            if (stats.StartingFlame == FlameType.Off)
             {
                 _flameTrail.Stop();
                 flameAudio.Stop();

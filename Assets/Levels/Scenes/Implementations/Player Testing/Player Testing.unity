@@ -4246,6 +4246,18 @@ PrefabInstance:
       propertyPath: type
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 2325513176207462504, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: m_Height
+      value: 1.125
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325513176207462504, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: m_Center.y
+      value: 0.68125
+      objectReference: {fileID: 0}
+    - target: {fileID: 2562816029365852821, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3495313856924946493, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
       propertyPath: m_Name
       value: Waxy
@@ -4295,8 +4307,16 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5828372911409160690, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: stepHeightRatio
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5828372911409160690, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
       propertyPath: sensorOffsetDistance
       value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 5828372911409160690, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: groundDetectionMask.m_Bits
+      value: 247
       objectReference: {fileID: 0}
     - target: {fileID: 5968281645302301543, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
       propertyPath: m_Radius
@@ -4314,6 +4334,14 @@ PrefabInstance:
       propertyPath: MeshPivot
       value: 
       objectReference: {fileID: 1588869531}
+    - target: {fileID: 6617663062572292289, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: landingFriction
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 6617663062572292289, guid: dae52fbb20a380045a29e9c4300d986c, type: 3}
+      propertyPath: interactionDuration
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
