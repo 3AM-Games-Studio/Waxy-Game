@@ -87,7 +87,7 @@ namespace Player.Modules
             const float penaltyMax = 0.1f;
             float t = Mathf.InverseLerp(penaltyStartAngle, 180f, angle);
             float penalty = Mathf.Lerp(1f, penaltyMax, t);
-            // _controller.MovementModule.SetRotationSpeedMultiplier(penalty);
+            _controller.MovementModule.SetRotationSpeedMultiplier(1f);
 
             // Si hay mucho ángulo y se está moviendo hacia adelante, forzar rotación del mesh
             bool wantsToRotate = angle > 15f && Mathf.Abs(inputDir.y) > 0.1f;

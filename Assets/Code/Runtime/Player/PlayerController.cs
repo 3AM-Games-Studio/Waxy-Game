@@ -45,6 +45,7 @@ namespace Player
         [Tooltip("Fricción horizontal aplicada mientras está en el suelo.")]
         public float groundFriction = 100f;
         
+        [SerializeField] [Range(0f, 1f)]public float landingFriction = 0.9f;
         [Tooltip("Fuerza de gravedad que tira hacia abajo al personaje.")]
         public float gravity = 50f;
         
@@ -172,9 +173,10 @@ namespace Player
 
             // ─────────────────────────────
             // Rising
+            At<Func<bool>>(rising, grounded, () => MovementModule.IsGrounded());
             At<Func<bool>>(rising, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
             At<Func<bool>>(rising, falling, () => MovementModule.ShouldStartFalling() || MovementModule.HitCeiling()); 
-
+            
             // ─────────────────────────────
             // Jumping
             At<Func<bool>>(jumping, rising, () => MovementModule.IsRising());
@@ -184,8 +186,9 @@ namespace Player
             // Grounded
             At<Func<bool>>(grounded, sliding, () => MovementModule.IsGroundTooSteep());
             At<Func<bool>>(grounded, pushing, () => PushModule.IsPushing);
-            At<Func<bool>>(grounded, idle, () => !input.HasMovementInput());
-            At<Func<bool>>(grounded, move, () => input.HasMovementInput());
+            At<Func<bool>>(grounded, jumping, () => MovementModule.WantsToJump());
+            At<Func<bool>>(grounded, idle, () => grounded.IsReadyToExit && !input.HasMovementInput());
+            At<Func<bool>>(grounded, move, () => grounded.IsReadyToExit && input.HasMovementInput());
 
             // ─────────────────────────────
             // Idle
@@ -305,7 +308,7 @@ namespace Player
         private bool _candleOn = true; // Esto luego se conecta con CandleController
         private bool isRunKeyPressed;
         public float interactionDuration;
-        
+
         private void ChangeCandle(bool candleOn)
         {
             _candleOn = candleOn;
