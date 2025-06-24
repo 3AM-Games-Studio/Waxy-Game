@@ -71,7 +71,7 @@ namespace Event_Bus
             List<Type> types = new List<Type>();
             for (int i = 0; i < assemblies.Length; i++)
             {
-                AssemblyType? assemblyType = GetAssemblyType(assemblies[i].GetName().Name);
+                var assemblyType = GetAssemblyType(assemblies[i].GetName().Name);
                 if (assemblyType != null)
                 {
                     assemblyTypes.Add((AssemblyType)assemblyType, assemblies[i].GetTypes());

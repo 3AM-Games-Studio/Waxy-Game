@@ -37,7 +37,7 @@ namespace Core
             var keys = new List<EGameScene>(Scenes.Keys);
             foreach (var key in keys)
             {
-                Scenes[key] = key.Equals(scene);
+                Scenes[key] = key == scene;
             }
             OnSceneLoadCompleted?.Invoke(scene);
         }
@@ -60,7 +60,7 @@ namespace Core
                 var keys = new List<EGameScene>(Scenes.Keys);
                 foreach (var key in keys)
                 {
-                    Scenes[key] = key.Equals(scene);
+                    Scenes[key] = key == scene;
                 }
                 ShaderManager.Instance.FadeOut(1f);
                 OnSceneLoadCompleted?.Invoke(scene);

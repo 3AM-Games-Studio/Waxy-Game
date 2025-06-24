@@ -19,10 +19,7 @@ namespace AdvancedController {
 
         private Transform tr;
 
-        private void Awake()
-        {
-            // UpdateManager.RegisterToLateUpdate(this);
-        }
+      
 
         private void OnEnable()
         {

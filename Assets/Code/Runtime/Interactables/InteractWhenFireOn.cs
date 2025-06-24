@@ -20,6 +20,11 @@ public class InteractWhenFireOn : MonoBehaviour, IInteract
         CandleController.OnFlameTurnOn -= TurnOn;
     }
 
+    private void OnDestroy()
+    {
+        CandleController.OnFlameTurnOn -= TurnOn;
+    }
+
     private void TurnOn(bool on)
     {
         _isFireOn = on;

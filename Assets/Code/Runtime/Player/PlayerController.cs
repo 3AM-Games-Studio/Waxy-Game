@@ -1,6 +1,7 @@
 using System;
 using AdvancedController;
 using Core;
+using Player.Candle;
 using UnityEngine;
 using UnityUtils.StateMachine;
 using Player.Modules;
@@ -13,53 +14,50 @@ using SlidingState = Player.States.SlidingState;
 
 namespace Player
 {
-    public class PlayerController : StatefulEntity , IUpdateReceiver
+    public class PlayerController : StatefulEntity 
     {
         public string State;
         [SerializeField,Header("Inputs")] InputReader input;
-        [SerializeField] private Transform camera;
+        [SerializeField] private new Transform camera;
         #region Variables
         
         [Header("Movement Settings")]
         [Tooltip("Velocidad base del personaje en el suelo.")]
-        public float walkSpeed;
+        public float walkSpeed = 7f;
         [Tooltip("Velocidad base del personaje en el suelo.")]
-        public float runSpeed;
-        
+        public float runSpeed = 15f;
         
         [Tooltip("Qué tan rápido se puede modificar la dirección en el aire.")]
-        public float airControlRate = 2f;
+        public float airControlRate = 3f;
         
         [Tooltip("Fuerza inicial aplicada hacia arriba al iniciar un salto.")]
-        public float jumpSpeed = 10f;
+        public float jumpSpeed = 16.5f;
         
         [Tooltip("Duración máxima del salto si se mantiene la tecla presionada.")]
-        public float jumpDuration = 0.2f;
+        public float jumpDuration = 0.75f;
         
         [Tooltip("Proporción mínima del salto que se debe ejecutar antes de permitir caída.")]
         [Range(0f, 1f)]
         public float minJumpRatio = 0.75f;
         [Tooltip("Fricción horizontal aplicada mientras está en el aire.")]
-        public float airFriction = 0.5f;
+        public float airFriction = 2f;
         
         [Tooltip("Fricción horizontal aplicada mientras está en el suelo.")]
         public float groundFriction = 100f;
         
+        [SerializeField] [Range(0f, 1f)]public float landingFriction = 0.9f;
         [Tooltip("Fuerza de gravedad que tira hacia abajo al personaje.")]
-        public float gravity = 30f;
+        public float gravity = 50f;
         
         [Tooltip("Fuerza adicional aplicada al deslizar por pendientes empinadas.")]
         public float slideGravity = 5f;
-        [Tooltip("Multiplicador de gravedad cuando se corta el salto antes de tiempo.")]
-        public float jumpCutGravityMultiplier = 2f;
-
-        
+       
         [Tooltip("Ángulo máximo que se considera suelo. Más allá de este valor, el personaje se desliza.")]
         public float slopeLimit = 30f;
         
         public float CurrentSpeed { get; private set; }
         public Transform MeshPivot;
-        public Vector3 MeshFoward => MeshPivot.forward;
+        public Vector3 MeshForward => MeshPivot.forward;
         #endregion
         
         #region Modules
@@ -92,26 +90,24 @@ namespace Player
         {
             input.EnablePlayerActions();
             SubscribeInputs();
-            SubscribeUpdates();
+            CandleController.OnFlameTurnOn += ChangeCandle;
         }
-
         private void OnEnable()
         {
             SubscribeInputs();
-            SubscribeUpdates();
+            CandleController.OnFlameTurnOn += ChangeCandle;
         }
 
         private void OnDisable()
         {
             UnsubscribeInputs();
-            UnsubscribeUpdates();
+            CandleController.OnFlameTurnOn -= ChangeCandle;
         }
         private void OnDestroy()
         {
             Events.Dispose();
-            
+            CandleController.OnFlameTurnOn -= ChangeCandle;
             UnsubscribeInputs();
-            UnsubscribeUpdates();
         }
         private void OnTriggerEnter(Collider other)
         {
@@ -128,19 +124,7 @@ namespace Player
         
         #region Update Methods
               
-        private void SubscribeUpdates()
-        {
-            UpdateManager.RegisterToUpdate(this);
-            UpdateManager.RegisterToFixedUpdate(this);
-            UpdateManager.RegisterToLateUpdate(this);
-        }
-        
-        private void UnsubscribeUpdates()
-        {
-            UpdateManager.UnregisterFromUpdate(this);
-            UpdateManager.UnregisterFromFixedUpdate(this);
-            UpdateManager.UnregisterFromLateUpdate(this);
-        }
+       
         public void Update()
         {
             stateMachine.Update();
@@ -149,25 +133,6 @@ namespace Player
         public void FixedUpdate()
         {
             stateMachine.FixedUpdate();
-        }
-        
-        public void LateUpdate()
-        {
-            MovementModule.LateTick();
-        }
-        public void OnUpdate()
-        {
-            // stateMachine.Update();
-        }
-
-        public void OnFixedUpdate()
-        {
-            // stateMachine.FixedUpdate();
-        }
-
-        public void OnLateUpdate()
-        {
-            // MovementModule.LateTick();
         }
         
         #endregion
@@ -208,9 +173,10 @@ namespace Player
 
             // ─────────────────────────────
             // Rising
+            At<Func<bool>>(rising, grounded, () => MovementModule.IsGrounded());
             At<Func<bool>>(rising, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
             At<Func<bool>>(rising, falling, () => MovementModule.ShouldStartFalling() || MovementModule.HitCeiling()); 
-
+            
             // ─────────────────────────────
             // Jumping
             At<Func<bool>>(jumping, rising, () => MovementModule.IsRising());
@@ -220,8 +186,9 @@ namespace Player
             // Grounded
             At<Func<bool>>(grounded, sliding, () => MovementModule.IsGroundTooSteep());
             At<Func<bool>>(grounded, pushing, () => PushModule.IsPushing);
-            At<Func<bool>>(grounded, idle, () => !input.HasMovementInput());
-            At<Func<bool>>(grounded, move, () => input.HasMovementInput());
+            At<Func<bool>>(grounded, jumping, () => MovementModule.WantsToJump());
+            At<Func<bool>>(grounded, idle, () => grounded.IsReadyToExit && !input.HasMovementInput());
+            At<Func<bool>>(grounded, move, () => grounded.IsReadyToExit && input.HasMovementInput());
 
             // ─────────────────────────────
             // Idle
@@ -239,7 +206,7 @@ namespace Player
             At<Func<bool>>(move, falling, () => !MovementModule.IsGrounded());
             At<Func<bool>>(move, pushing, () => PushModule.IsPushing);
             At<Func<bool>>(move, interacting, WantsToInteract);
-            At<Func<bool>>(move, running, () => isRunKeyPressed && isCandleLit);
+            At<Func<bool>>(move, running, () => isRunKeyPressed && _candleOn);
             At<Func<bool>>(move, idle, () => !input.HasMovementInput());
 
             // ─────────────────────────────
@@ -247,8 +214,8 @@ namespace Player
             At<Func<bool>>(running, sliding, () => MovementModule.IsGrounded() && MovementModule.IsGroundTooSteep());
             At<Func<bool>>(running, jumping, () => MovementModule.WantsToJump());
             At<Func<bool>>(running, falling, () => !MovementModule.IsGrounded());
-            At<Func<bool>>(running, move, () => input.HasMovementInput() && (!isRunKeyPressed || !isCandleLit));
-            At<Func<bool>>(running, idle, () => !input.HasMovementInput() && (!isRunKeyPressed || !isCandleLit));
+            At<Func<bool>>(running, move, () => input.HasMovementInput() && (!isRunKeyPressed || !_candleOn));
+            At<Func<bool>>(running, idle, () => !input.HasMovementInput() && (!isRunKeyPressed || !_candleOn));
 
             // ─────────────────────────────
             // Pushing
@@ -338,13 +305,17 @@ namespace Player
             wantsToInteract = false;
             return temp;
         }
-        [SerializeField] private bool isCandleLit = true; // Esto luego se conecta con CandleController
+        private bool _candleOn = true; // Esto luego se conecta con CandleController
         private bool isRunKeyPressed;
         public float interactionDuration;
 
+        private void ChangeCandle(bool candleOn)
+        {
+            _candleOn = candleOn;
+        }
         private void HandleRunInput(bool isButtonPressed)
         {
-            isRunKeyPressed = isCandleLit && isButtonPressed;
+            isRunKeyPressed = _candleOn && isButtonPressed;
             CurrentSpeed = isRunKeyPressed ? runSpeed : walkSpeed;
         }
         #endregion
@@ -373,38 +344,6 @@ namespace Player
         {
             MovementModule.TeleportTo(lastCheckpoint);
         }
-
-        public float upDis;
-        public float fowardDis;
-        public LayerMask WallMask;
-        private void OnDrawGizmos()
-        {
-            return;
-            if (MeshPivot == null) return;
-
-            // const float rayHeightOffset = 0.9f;
-            // const float rayLength = 5f;
-
-            // 1. Origen del raycast: posición del cuerpo + altura
-            Vector3 origin = transform.position + Vector3.up * upDis;
-            Vector3 direction = MeshPivot.forward;
-
-            // 2. Dibujar línea de referencia
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(origin, origin + direction * fowardDis);
-
-            // 3. Raycast real con máscara
-            if (Physics.Raycast(origin, direction, out RaycastHit hit, fowardDis, WallMask, QueryTriggerInteraction.Ignore))
-            {
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(origin, hit.point);
-                Gizmos.DrawSphere(hit.point, 0.05f);
-
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawRay(hit.point, hit.normal * 0.5f);
-            }
-        }
-
         #endregion
     }
     

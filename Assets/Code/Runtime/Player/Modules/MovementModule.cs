@@ -40,7 +40,7 @@ namespace Player.Modules
             groundIgnoreTimer = new CountdownTimer(groundIgnoreDuration);
         }
 
-        public void LateTick()
+        public void ResetCeiling()
         {
             ceilingDetector?.Reset();
         }
@@ -213,17 +213,38 @@ namespace Player.Modules
         }
         public void OnGroundContactRegained()
         {
-            _mover.CheckForGround();
+            _mover.CheckForGround(); 
+            ResetCeiling();
+
+            // Separar momentum vertical
             Vector3 verticalMomentum = VectorMath.ExtractDotVector(momentum, transform.up);
-
-            // Si venías cayendo, eliminamos ese momentum vertical
             if (VectorMath.GetDotProduct(verticalMomentum, transform.up) < 0f)
-                momentum = VectorMath.RemoveDotVector(momentum, transform.up);
+                verticalMomentum = Vector3.zero;
 
-            // Si no hay input horizontal, eliminamos también el horizontal
-            if (_input.Direction.sqrMagnitude < 0.01f)
-                momentum = Vector3.zero;
+            // Calcular movimiento horizontal como en ApplyGroundedMovement()
+            Vector2 inputDir = _input.Direction;
+
+            Vector3 moveDirection = Vector3.ProjectOnPlane(_cameraTransform.right, Vector3.up).normalized * inputDir.x +
+                                    Vector3.ProjectOnPlane(_cameraTransform.forward, Vector3.up).normalized * inputDir.y;
+
+            if (moveDirection.sqrMagnitude > 1f)
+                moveDirection.Normalize();
+
+            Vector3 targetVelocity = moveDirection * (_controller.CurrentSpeed * _rotationSpeedMultiplier);
+
+            // Aplicar fricción base (como en grounded)
+            Vector3 horizontalMomentum = VectorMath.RemoveDotVector(momentum, transform.up);
+            horizontalMomentum = Vector3.MoveTowards(horizontalMomentum, targetVelocity, _controller.groundFriction * Time.fixedDeltaTime);
+
+            // Aplicar landing friction como porcentaje
+            horizontalMomentum *= _controller.landingFriction;
+
+            // Combinar todo
+            momentum = verticalMomentum + horizontalMomentum;
+            _mover.SetVelocity(momentum);
+            _savedVelocity = momentum;
         }
+
         
         public void ApplyIdleFriction()
         {
