@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 7fb45775ad3d6ce4ba0a8f328b6a46d5
+guid: 83417e0285cf7b44b9e311a2e39e66bd
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: LibrosBasicos1
-    second: {fileID: 2100000, guid: a43bb8d23b313ac4d95aa1113885f250, type: 2}
+      name: LibrosVela_Llama
+    second: {fileID: 2100000, guid: 25e0d39d8d6e15b4b8de0df0607c8c5e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -38,7 +38,7 @@ ModelImporter:
     isReadable: 0
   meshes:
     lODScreenPercentages: []
-    globalScale: 0.01
+    globalScale: 0.015
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
@@ -93,7 +93,7 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    globalScale: 0.01
+    globalScale: 0.015
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
